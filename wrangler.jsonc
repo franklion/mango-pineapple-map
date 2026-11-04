@@ -3,7 +3,7 @@
   "name": "mango-pineapple-map",
   "compatibility_date": "2025-10-01",
   "assets": {
-    "directory": "./",
+    "directory": "./public",
     "not_found_handling": "404-page"
   }
 }

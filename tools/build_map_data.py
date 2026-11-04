@@ -13,7 +13,7 @@
 """
 import base64, gzip, json, math, os, sys, urllib.request
 
-OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "map")
+OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "public", "map")
 KEEP_LAYERS = {"water", "waterway", "landuse", "landcover", "park", "building",
                "transportation", "transportation_name", "water_name", "poi", "place"}
 POI_CLASSES = {b"park", b"school", b"college", b"railway", b"attraction", b"zoo",
