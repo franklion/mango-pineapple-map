@@ -269,6 +269,10 @@ header.brand { display: flex; flex-direction: column; gap: 6px; }
   .waves path, .boat, .whale, .whale .spout, .pin .drop, .pin .eye, .pin .flag, .pin circle.halo, .lmk .b, .lmk .l { animation: none !important; }
   .whale .spout { opacity: 0; }
 }
+.day-date { font-family: var(--font-body); font-size: var(--step--1); color: var(--ink-soft); font-weight: 400; margin-left: 4px; }
+.day-note { padding-left: 46px; }
+.story-box.highlight h3 { color: var(--mango-ink); }
+.story-box.highlight .howto { margin-top: 6px; }
 footer.foot { margin-top: auto; font-size: 0.75rem; color: var(--ink-soft); }
 
 /* SVG map styling */
@@ -388,12 +392,13 @@ const KINDS = {
 const TRIPS = [
   {
     id: "hsinchu-2026-10",
+    start: "2026-10-09",
     title: "竹北公園散步，一路玩到火鍋",
     region: "新竹・竹北",
     stamp: "竹",
     county: "新竹縣",
     map: { minZoom: 12, maxZoom: 17, bounds: [[24.790, 120.965], [24.840, 121.055]] },
-    pin: { lon: 121.03, lat: 24.82, label: "新竹" },
+    pin: { lon: 121.03, lat: 24.82, label: "新竹", flag: "left" },
     dates: "2026/10/9 – 10/11",
     length: "三天兩夜",
     transport: ["高鐵", "Uber"],
@@ -458,6 +463,61 @@ const TRIPS = [
       ],
       stops: ["sheraton", "veg", "snail", "rafflesia", "bridge", "gungun"]
     }
+  },
+  {
+    id: "yilan-2026-04",
+    start: "2026-04-18",
+    title: "紫森林看螢火蟲，宜蘭兩天一夜",
+    region: "宜蘭・羅東／冬山",
+    stamp: "宜",
+    county: "宜蘭縣",
+    map: { bounds: [[24.610, 121.725], [24.690, 121.785]] },
+    pin: { lon: 121.76, lat: 24.66, label: "宜蘭" },
+    dates: "2026/4/18 – 4/19",
+    length: "兩天一夜",
+    transport: ["高鐵", "Uber"],
+    hook: "白天逛羅東、騎車繞梅花湖，晚上住進森林，跟著導覽老師看滿天螢火蟲。",
+    lead: "四月正是螢火蟲季。第一天在羅東林業園區散步拍照、吃港式茶餐廳，下午到梅花湖騎自行車，喝杯咖啡後住進蓋在森林裡的紫森林；晚餐後參加飯店的夜間生態導覽，在步道上看到好多好多螢火蟲。第二天在羅東吃了一頓會想再來的午餐才回家。",
+    blog: { title: "一定要和孩子去一次的星光之旅", url: "https://vocus.cc/article/6ae063dffd89780001930bbd" },
+    days: [
+      { label: "Day 1", date: "4/18（六）", stops: ["forestry", "hangwan", "meihua", "bear", "sanfu"],
+        note: "晚餐後參加飯店的夜間生態導覽。" },
+      { label: "Day 2", date: "4/19（日）", stops: ["haohao"] }
+    ],
+    highlight: {
+      title: "夜間生態導覽：森林裡的星光",
+      text: [
+        "導覽老師帶大家拿著手電筒走上步道。走到一半，老師請大家關掉手電筒、安靜下來，黑暗裡先亮起幾個閃爍的光點，接著四周亮起好多好多螢火蟲。",
+        "一路上還看到青蛙、竹節蟲和各種昆蟲，甚至遇到一條青竹絲。"
+      ],
+      tips: [
+        "台灣的賞螢季大約在四到六月，實際時間會依地區、天氣和螢火蟲種類而不同，出發前先確認。",
+        "聽導覽老師的提醒：不用強光照螢火蟲，也不要捕捉。"
+      ]
+    },
+    story: {
+      title: "爸爸的旅行筆記",
+      text: [
+        "大自然本身就是很好的遊樂場，不必排太多景點，也不用一直拍照。放下手機、放慢腳步，看看樹、找找昆蟲、聽聽森林的聲音。",
+        "螢火蟲對棲地、水質和光害都很挑剔，能看到這片星光，更要好好珍惜。",
+        "只要孩子開始好奇，願意多看一眼、多問一個為什麼，這趟就很值得。"
+      ]
+    },
+    places: [
+      { id: "forestry", kind: "play", name: "羅東林業園區", lon: 121.77226, lat: 24.68212, area: "宜蘭羅東", day: "4/18 上午",
+        note: "第一站，在園區裡走走、拍照。", tags: ["散步拍照"] },
+      { id: "hangwan", kind: "food", name: "行運茶餐", lon: 121.77051, lat: 24.68129, area: "宜蘭羅東", day: "4/18 午餐", labelLeft: true,
+        note: "港式茶餐廳。點了甜港點組合、港式蘿蔔糕、帶骨豬扒飯、蜜汁叉燒酥和豬扒公仔麵。", tags: ["港式茶餐廳", "叉燒酥"] },
+      { id: "meihua", kind: "park", name: "梅花湖", lon: 121.73306, lat: 24.64306, area: "宜蘭冬山", day: "4/18 下午", labelLeft: true,
+        note: "下午在湖邊騎自行車繞湖。", tags: ["騎自行車"] },
+      { id: "bear", kind: "food", name: "大魔遇見熊 1 樓咖啡館", lon: 121.73183, lat: 24.64532, area: "宜蘭冬山", day: "4/18 下午茶",
+        note: "騎完車來喝飲料休息。咖啡喝得出品味，值得再訪。", tags: ["咖啡", "值得二訪"] },
+      { id: "sanfu", kind: "stay", name: "紫森林（三富休閒農場）", lon: 121.75473, lat: 24.61753, area: "宜蘭冬山", day: "4/18 住宿",
+        note: "飯店蓋在森林裡，我們住一樓，晚上聽得到窗外的蟲鳴。院子的大水池裡養了很多又粗又壯的大魚，一家人在池邊餵魚、看風景。晚餐點了鬼頭刀魚排、蔥油雞和養生素食套餐，最讓人驚喜的反而是素食套餐，豐盛又好吃。",
+        tags: ["森林裡的飯店", "餵魚", "生態導覽"] },
+      { id: "haohao", kind: "food", name: "HaoHao Kaffe", lon: 121.77751, lat: 24.68067, area: "宜蘭羅東", day: "4/19 午餐",
+        note: "第二天的午餐，餐點非常棒，會想再來。", tags: ["值得二訪"] }
+    ]
   }
 ];
 
@@ -481,9 +541,13 @@ function brandHTML() {
 }
 
 /* ---------- 總覽 ---------- */
+// 行程順序：步行路線（route）或逐日行程（days），編號跨天連續
+const seqOf = t => t.route ? t.route.stops : (t.days || []).flatMap(d => d.stops);
+const byNewest = () => [...TRIPS].sort((a, b) => b.start.localeCompare(a.start));
+
 function renderOverview() {
   activePlace = null;
-  const cards = TRIPS.map(t => `
+  const cards = byNewest().map(t => `
     <li><button class="trip-card" data-trip="${t.id}" id="card-${t.id}">
       <span class="stamp" aria-hidden="true">${esc(t.stamp)}</span>
       <h3>${esc(t.title)}</h3>
@@ -524,8 +588,8 @@ function drawTaiwan() {
       <circle class="halo" cx="${x}" cy="${y}" r="16"/>
       <path class="drop" d="M ${x} ${y} c -3 -7 -10 -11 -10 -19 a 10 10 0 1 1 20 0 c 0 8 -7 12 -10 19 z"/>
       <circle class="eye" cx="${x}" cy="${y - 19}" r="4"/>
-      <g class="flag" transform="translate(${x + 16} ${y - 34})"><rect rx="8" width="${(t.pin.label.length + 1) * 16 + 92}" height="26"/>
-        <text x="10" y="18">${esc(t.pin.label)}・${esc(t.dates.slice(0, 7))}</text></g></g>`; }).join("");
+      <g class="flag" transform="translate(${t.pin.flag === "left" ? x - 16 - ((t.pin.label.length + 1) * 16 + 92) : x + 16} ${y - 34})"><rect rx="8" width="${(t.pin.label.length + 1) * 16 + 92}" height="26"/>
+        <text x="10" y="18">${esc(t.pin.label)}・${t.start.slice(0, 4)}/${+t.start.slice(5, 7)}</text></g></g>`; }).join("");
   const total = counties.length, done = visited.size;
   const [bx, by] = P(120.08, 24.45), [wx, wy] = P(121.93, 23.35);
   const critters = `
@@ -580,13 +644,31 @@ function placeCard(p, index) {
 function renderTrip(t) {
   activePlace = null;
   const byId = Object.fromEntries(t.places.map(p => [p.id, p]));
-  const routeStops = t.route.stops.map((id, i) => {
-    const p = byId[id], kd = KINDS[p.kind];
-    return `<li class="stop"><span class="dot" style="background:${kd.color}">${i + 1}</span>${placeCard(p)}</li>`;
-  }).join("");
+  const seq = seqOf(t);
+  const stopLi = id => { const p = byId[id], kd = KINDS[p.kind];
+    return `<li class="stop"><span class="dot" style="background:${kd.color}">${seq.indexOf(id) + 1}</span>${placeCard(p)}</li>`; };
+  const tipsBox = (title, tips) => tips ? `<div class="howto tips"><h4>${ic("bulb")}${esc(title)}</h4><ul>${tips.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : "";
+  const routeHTML = t.route ? `
+    <section class="route">
+      <h3>${ic("walk")}${esc(t.route.title)}</h3>
+      <p class="sub">${esc(t.route.sub)}</p>
+      ${t.route.how ? `<div class="howto"><h4>${ic("walk")}怎麼陪孩子走完 2 公里</h4><ul>${t.route.how.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : ""}
+      <ol class="stops">${t.route.stops.map(stopLi).join("")}</ol>
+      ${tipsBox("出發前的小提醒", t.route.tips)}
+    </section>` : (t.days || []).map(d => `
+    <section class="route day">
+      <h3>${ic("calendar")}${esc(d.label)}<span class="day-date">${esc(d.date)}</span></h3>
+      <ol class="stops">${d.stops.map(stopLi).join("")}</ol>
+      ${d.note ? `<p class="sub day-note">${esc(d.note)}</p>` : ""}
+    </section>`).join("");
+  const highlightHTML = t.highlight ? `
+    <section class="story-box highlight"><h3>${ic("play")}${esc(t.highlight.title)}</h3>
+      ${t.highlight.text.map(x => `<p>${esc(x)}</p>`).join("")}
+      ${tipsBox("賞螢小提醒", t.highlight.tips)}
+    </section>` : "";
   const dotOf = (kd, p) => `<span class="dot${p.wish ? " wish" : ""}" style="background:${p.wish ? "transparent" : kd.color}">${kd.glyph}</span>`;
   const wishes = t.places.filter(p => p.wish).map(p => `<li>${dotOf(KINDS[p.kind], p)}${placeCard(p)}</li>`).join("");
-  const others = t.places.filter(p => !p.wish && !t.route.stops.includes(p.id)).map(p => {
+  const others = t.places.filter(p => !p.wish && !seq.includes(p.id)).map(p => {
     const kd = KINDS[p.kind];
     return `<li>${dotOf(kd, p)}${placeCard(p)}</li>`;
   }).join("");
@@ -599,13 +681,8 @@ function renderTrip(t) {
       <p class="lead">${esc(t.lead)}</p>
       ${t.blog ? `<a class="blog-link" href="${esc(t.blog.url)}" target="_blank" rel="noopener">${ic("book")}完整遊記：${esc(t.blog.title)} →</a>` : ""}
     </section>
-    <section class="route">
-      <h3>${ic("walk")}${esc(t.route.title)}</h3>
-      <p class="sub">${esc(t.route.sub)}</p>
-      ${t.route.how ? `<div class="howto"><h4>${ic("walk")}怎麼陪孩子走完 2 公里</h4><ul>${t.route.how.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : ""}
-      <ol class="stops">${routeStops}</ol>
-      ${t.route.tips ? `<div class="howto tips"><h4>${ic("bulb")}出發前的小提醒</h4><ul>${t.route.tips.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : ""}
-    </section>
+    ${routeHTML}
+    ${highlightHTML}
     ${others ? `<section class="others"><h3>${ic("pin")}其他去過的地方</h3><ul class="other-list">${others}</ul></section>` : ""}
     ${wishes ? `<section class="others"><h3>${ic("wish")}這次沒去成，下次想去</h3><ul class="other-list">${wishes}</ul></section>` : ""}
     ${t.story ? `<section class="story-box"><h3>${ic("pen")}${esc(t.story.title)}</h3>${[].concat(t.story.text).map(x => `<p>${esc(x)}</p>`).join("")}${t.blog ? `<a class="blog-link" href="${esc(t.blog.url)}" target="_blank" rel="noopener">${ic("book")}在部落格閱讀完整遊記 →</a>` : ""}</section>` : ""}
@@ -619,7 +696,7 @@ function renderTrip(t) {
     if ((e.key === "Enter" || e.key === " ") && !e.target.closest("a")) { e.preventDefault(); setActive(b.dataset.place, false); }
   }));
   drawLocal(t);
-  mapNote.textContent = "橘色虛線是走路的順序。點左邊的地點，地圖會移過去；點地圖上的圖釘，會跳到那段介紹。";
+  mapNote.textContent = t.route ? "橘色虛線是走路的順序。點左邊的地點，地圖會移過去；點地圖上的圖釘，會跳到那段介紹。" : "圖釘上的數字是行程順序，細線依每天的行程連起來（景點之間搭車移動）。點左邊的地點，地圖會移過去。";
   window.scrollTo(0, 0);
 }
 
@@ -755,6 +832,17 @@ function animateRoute() {
 }
 function addRoute(t) {
   const byId = Object.fromEntries(t.places.map(p => [p.id, p]));
+  if (!t.route) {  // 逐日行程：每天一條細實線，第一天芒果色、第二天鳳梨綠
+    (t.days || []).forEach((d, i) => {
+      const id = "day-" + i;
+      if (gmap2.getSource(id) || d.stops.length < 2) return;
+      const coords = d.stops.map(s => [byId[s].lon, byId[s].lat]);
+      gmap2.addSource(id, { type: "geojson", data: { type: "Feature", geometry: { type: "LineString", coordinates: coords } } });
+      gmap2.addLayer({ id, type: "line", source: id, layout: { "line-cap": "round", "line-join": "round" },
+        paint: { "line-color": [isDark() ? "#f0a944" : "#e8962a", isDark() ? "#7bbf88" : "#3d7a4c"][i % 2], "line-width": 2.5, "line-opacity": 0.75 } });
+    });
+    return;
+  }
   const coords = t.route.stops.map(id => [byId[id].lon, byId[id].lat]);
   if (gmap2.getSource("route")) return;
   gmap2.addSource("route", { type: "geojson", data: { type: "Feature", geometry: { type: "LineString", coordinates: coords } } });
@@ -788,9 +876,9 @@ async function drawLocal(t) {
   gmap2.on("style.load", () => addRoute(t));
 
   t.places.filter(p => !p.offMap).forEach(p => {
-    const kd = KINDS[p.kind], idx = t.route.stops.indexOf(p.id);
+    const kd = KINDS[p.kind], seq = seqOf(t), idx = seq.indexOf(p.id);
     const el = document.createElement("div");
-    el.className = "lmk" + (p.labelLeft ? " left" : "") + (p.wish ? " wish" : ""); el.style.setProperty("--i", idx >= 0 ? idx : t.route.stops.length + 1); el.dataset.place = p.id; el.tabIndex = 0; el.setAttribute("role", "button"); el.setAttribute("aria-label", p.name);
+    el.className = "lmk" + (p.labelLeft ? " left" : "") + (p.wish ? " wish" : ""); el.style.setProperty("--i", idx >= 0 ? idx : seq.length + 1); el.dataset.place = p.id; el.tabIndex = 0; el.setAttribute("role", "button"); el.setAttribute("aria-label", p.name);
     el.innerHTML = `<div class="b" style="background:${kd.color}">${idx >= 0 ? idx + 1 : kd.glyph}</div><div class="l">${esc(p.name.replace(/ GUNGUN FONDUE/, ""))}</div>`;
     el.addEventListener("click", ev => { ev.stopPropagation(); setActive(p.id, true); });
     el.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); setActive(p.id, true); } });
@@ -801,8 +889,8 @@ async function drawLocal(t) {
   const b = new maplibregl.LngLatBounds();
   focus.forEach(p => b.extend([p.lon, p.lat]));
   gmap2.fitBounds(b, { padding: narrow ? { top: 44, bottom: 52, left: 40, right: 56 } : { top: 50, bottom: 50, left: 40, right: 120 }, duration: 0 });
-  // 手機上縮小時只顯示編號圖釘，放大或點選後才顯示地名，避免標籤擠在一起
-  const syncLabels = () => mapbox.classList.toggle("compact-labels", narrow && gmap2.getZoom() < 15.2);
+  // 縮小時（手機或景點分散的旅程）只顯示編號圖釘，放大或點選後才顯示地名，避免標籤擠在一起
+  const syncLabels = () => mapbox.classList.toggle("compact-labels", (narrow && gmap2.getZoom() < 15.2) || gmap2.getZoom() < 13.8);
   gmap2.on("zoom", syncLabels); syncLabels();
   gmap2.once("load", () => { const a = mapbox.querySelector(".maplibregl-ctrl-attrib"); if (a) a.classList.remove("maplibregl-compact-show"); });
 }
