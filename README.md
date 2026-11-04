@@ -31,9 +31,9 @@ cd public && python3 -m http.server 8000
 ## 新增一趟旅程
 
 1. 在 `public/index.html` 的 `TRIPS` 陣列新增一筆：
-   - `id`、`title`、`region`、`county`（例：`新竹縣`，首頁會塗色）、`pin`、`dates`、`length`、`transport`、`lead`、`story`、`blog`（部落格連結，可省略）
+   - `id`、`start`（`YYYY-MM-DD`，用來排序與首頁旗子日期）、`title`、`region`、`county`（例：`新竹縣`，首頁會塗色）、`pin`（`flag: "left"` 可讓旗子放左邊）、`dates`、`length`、`transport`、`lead`、`story`、`blog`（部落格連結，可省略）、`highlight`（特別段落，可省略）
    - `places[]`：每個地點的 `kind`（stay / food / play / park / move / wish）、`name`、精確 `lat` / `lon`（從 Google 地圖複製）、`note`、`tags`，可選 `nick`、`age`、`day`、`tip`、`address` / `area`、`offRoute`、`wish`、`labelLeft`
-   - `route`：步行順序 `stops`、`how`（陪走技巧）、`tips`（提醒），可省略
+   - 行程順序二選一：`route`（步行路線：`stops`、`how`、`tips`，地圖畫成動態虛線）或 `days`（逐日行程：每天 `label`、`date`、`stops`、`note`，地圖每天一條細線）
    - `map.bounds`：地圖預設範圍（實際會自動框住步行路線上的地點）
 2. commit 並 push 到 `main`，Cloudflare 會自動部署。
 
