@@ -36,6 +36,7 @@
   --land-hover: #ebe8d4;
   --mango-soft: #fbe3bd;
   --tile-filter: none;
+  --whale: #7ea6c2;
   --font-display: "LXGW WenKai TC", "Kaiti TC", "BiauKai", "Noto Serif TC", serif;
   --font-body: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
   --step--1: 0.8125rem;
@@ -48,13 +49,13 @@
   :root:not([data-theme="light"]) {
     --paper: #171c17; --paper-2: #1f261f; --ink: #e8ecdf; --ink-soft: #a6b09c; --line: #364032;
     --mango: #f0a944; --mango-ink: #f6c27a; --leaf: #7bbf88; --stay: #79a8d6; --food: #ec8a6f;
-    --play: #b892dd; --park: #7bbf88; --move: #9aa391; --card: #1c221c; --sea: #142226; --sea-line: #23383c; --land: #2a3227; --land-hover: #333d2f; --mango-soft: #4a3415; --tile-filter: invert(1) hue-rotate(180deg) brightness(.82) contrast(.92) saturate(.7); color-scheme: dark;
+    --play: #b892dd; --park: #7bbf88; --move: #9aa391; --card: #1c221c; --sea: #142226; --sea-line: #23383c; --land: #2a3227; --land-hover: #333d2f; --mango-soft: #4a3415; --tile-filter: invert(1) hue-rotate(180deg) brightness(.82) contrast(.92) saturate(.7); --whale: #5b88a8; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --paper: #171c17; --paper-2: #1f261f; --ink: #e8ecdf; --ink-soft: #a6b09c; --line: #364032;
   --mango: #f0a944; --mango-ink: #f6c27a; --leaf: #7bbf88; --stay: #79a8d6; --food: #ec8a6f;
-  --play: #b892dd; --park: #7bbf88; --move: #9aa391; --card: #1c221c; --sea: #142226; --sea-line: #23383c; --land: #2a3227; --land-hover: #333d2f; --mango-soft: #4a3415; --tile-filter: invert(1) hue-rotate(180deg) brightness(.82) contrast(.92) saturate(.7); color-scheme: dark;
+  --play: #b892dd; --park: #7bbf88; --move: #9aa391; --card: #1c221c; --sea: #142226; --sea-line: #23383c; --land: #2a3227; --land-hover: #333d2f; --mango-soft: #4a3415; --tile-filter: invert(1) hue-rotate(180deg) brightness(.82) contrast(.92) saturate(.7); --whale: #5b88a8; color-scheme: dark;
 }
 html, body { height: 100%; }
 body {
@@ -162,6 +163,8 @@ header.brand { display: flex; flex-direction: column; gap: 6px; }
   background: transparent; border: 1px solid transparent; border-radius: 12px;
   padding: 4px 10px 14px; display: flex; flex-direction: column; gap: 4px;
 }
+.place { box-sizing: border-box; min-width: 0; }
+.place p, .place .tip span { overflow-wrap: anywhere; }
 .place:focus-visible { outline: 2px solid var(--mango); outline-offset: 2px; }
 .place:hover { background: var(--card); border-color: var(--line); }
 .place.active { background: var(--card); border-color: var(--mango); }
@@ -217,6 +220,55 @@ header.brand { display: flex; flex-direction: column; gap: 6px; }
   .cartouche .c-title { font-size: 15px; }
 }
 .map-loading { margin: 0; padding: 16px; color: var(--ink-soft); font-size: var(--step--1); }
+
+/* 小圖示 */
+.ic { width: 1.05em; height: 1.05em; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; vertical-align: -0.17em; }
+.kind { display: inline-flex; align-items: center; gap: 3px; }
+.kind .ic { width: 0.95em; height: 0.95em; stroke-width: 2; }
+.facts li { display: inline-flex; align-items: center; gap: 5px; }
+.facts .ic { color: var(--mango-ink); }
+.route h3, .others h3, .story-box h3 { display: flex; align-items: center; gap: 6px; }
+.route h3 .ic, .others h3 .ic { color: var(--mango-ink); }
+.howto h4 { display: flex; align-items: center; gap: 5px; }
+.place .tip { display: flex; gap: 4px; align-items: flex-start; }
+.place .tip .ic { margin-top: 0.15em; }
+.place .gmap, .blog-link { display: inline-flex; align-items: center; gap: 4px; }
+
+/* 首頁動態：海浪漂、小船晃、鯨魚噴水、圖釘落下 */
+.waves .w-a { animation: drift-l 9s linear infinite; }
+.waves .w-b { animation: drift-r 12s linear infinite; }
+@keyframes drift-l { to { transform: translateX(-20px); } }
+@keyframes drift-r { from { transform: translateX(-20px); } to { transform: translateX(0); } }
+.boat { animation: bob 3.2s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }
+.boat .hull { fill: var(--ink-soft); }
+.boat .mast { stroke: var(--ink-soft); stroke-width: 1.2; }
+.boat .sail { fill: var(--card); stroke: var(--ink-soft); stroke-width: 1; stroke-linejoin: round; }
+@keyframes bob { 0%, 100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-2.5px) rotate(4deg); } }
+.whale .body { fill: var(--whale); }
+.whale .eye-w { fill: var(--card); }
+.whale .spout { stroke: var(--whale); stroke-width: 1.4; stroke-linecap: round; fill: none; opacity: 0; animation: spout 4.5s ease-out infinite; }
+.whale { animation: swim 4.5s ease-in-out infinite; }
+@keyframes spout { 0%, 55% { opacity: 0; transform: translateY(3px); } 65% { opacity: 1; transform: translateY(0); } 85%, 100% { opacity: 0; transform: translateY(-3px); } }
+@keyframes swim { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(2px); } }
+.pin .drop, .pin .eye { animation: pin-drop .7s cubic-bezier(.3, 1.5, .6, 1) .2s backwards; transform-box: fill-box; transform-origin: 50% 100%; }
+.pin .eye { transform-origin: 50% 50%; }
+.pin .flag { animation: fade-up .5s ease-out .7s backwards; }
+.pin circle.halo { transform-box: fill-box; transform-origin: center; animation: halo 2.4s ease-out 1s infinite; }
+@keyframes pin-drop { from { transform: translateY(-40px); opacity: 0; } }
+@keyframes fade-up { from { opacity: 0; transform: translateY(4px); } }
+@keyframes halo { 0% { transform: scale(.6); opacity: .45; } 100% { transform: scale(2); opacity: 0; } }
+.trip-card .stamp { transition: transform .3s cubic-bezier(.3, 1.5, .6, 1); }
+.trip-card:hover .stamp { transform: rotate(-10deg) scale(1.06); }
+
+/* 旅程地圖：圖釘依序彈出 */
+.lmk .b { animation: pop .45s cubic-bezier(.3, 1.6, .6, 1) backwards; animation-delay: calc(var(--i, 0) * 70ms + 150ms); }
+.lmk .l { animation: fade-up .4s ease-out backwards; animation-delay: calc(var(--i, 0) * 70ms + 300ms); }
+@keyframes pop { from { transform: scale(0); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .waves path, .boat, .whale, .whale .spout, .pin .drop, .pin .eye, .pin .flag, .pin circle.halo, .lmk .b, .lmk .l { animation: none !important; }
+  .whale .spout { opacity: 0; }
+}
 footer.foot { margin-top: auto; font-size: 0.75rem; color: var(--ink-soft); }
 
 /* SVG map styling */
@@ -305,6 +357,24 @@ footer.foot { margin-top: auto; font-size: 0.75rem; color: var(--ink-soft); }
 </div>
 
 <script>
+// 線條小圖示（24×24，跟隨文字顏色）
+const ICON_PATHS = {
+  stay: "M3 18v-7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v7M3 14h18M7 9V7.5A1.5 1.5 0 0 1 8.5 6h2A1.5 1.5 0 0 1 12 7.5V9",
+  food: "M4 12h16a8 8 0 0 1-16 0zM9 3.5l2.5 6M15.5 3.5l-2 6",
+  play: "M12 3.5l2.5 5.3 5.8.7-4.3 4 1.1 5.7L12 16.4l-5.1 2.8 1.1-5.7-4.3-4 5.8-.7z",
+  park: "M12 21v-4M12 3l5 7h-3l4 6.5H6L10 10H7z",
+  move: "M7.5 3h9A2.5 2.5 0 0 1 19 5.5V14a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V5.5A2.5 2.5 0 0 1 7.5 3zM5 10h14M8.5 21l1.5-4M15.5 21L14 17",
+  wish: "M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z",
+  calendar: "M5 5.5h14V20H5zM5 9.5h14M9 3.5v4M15 3.5v4",
+  moon: "M19.5 14.5A7.5 7.5 0 1 1 9.5 4.5a6 6 0 0 0 10 10z",
+  walk: "M13.5 5.5a1.5 1.5 0 1 0 0-.01M10 21l1.8-5.5L15 18v3M8 12l3.5-3.5 3 2.5 3 1M11.5 8.5l-.8 7",
+  bulb: "M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.4c.7.7 1 1.6 1 2.6h6c0-1 .3-1.9 1-2.6A6 6 0 0 0 12 3z",
+  book: "M5 4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5zM5 19.5A1.5 1.5 0 0 0 6.5 21H19v-3",
+  pin: "M12 21s-6-5.4-6-11a6 6 0 0 1 12 0c0 5.6-6 11-6 11zM12 8a2 2 0 1 1 0 4 2 2 0 0 1 0-4z",
+  pen: "M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4"
+};
+const ic = name => `<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="${ICON_PATHS[name]}"/></svg>`;
+
 const KINDS = {
   stay: { label: "住宿", glyph: "住", color: "var(--stay)" },
   food: { label: "美食", glyph: "食", color: "var(--food)" },
@@ -443,7 +513,7 @@ function drawTaiwan() {
   for (let y = 18 - 22 * Math.ceil(H * 2 / 22); y < H * 3; y += 22) {
     let d = `M ${x0} ${y}`;
     for (let x = x0; x < x1; x += 20) d += ` q 5 -3 10 0 t 10 0`;
-    waves += `<path d="${d}"/>`;
+    waves += `<path class="${(Math.round(y / 22) % 2) ? "w-a" : "w-b"}" d="${d}"/>`;
   }
   const shapes = counties.map(c => `<path class="county${visited.has(c.name) ? " visited" : ""}" d="${c.d}"><title>${c.name}</title></path>`).join("");
   const shadow = counties.map(c => c.d).join("");
@@ -457,12 +527,25 @@ function drawTaiwan() {
       <g class="flag" transform="translate(${x + 16} ${y - 34})"><rect rx="8" width="${(t.pin.label.length + 1) * 16 + 92}" height="26"/>
         <text x="10" y="18">${esc(t.pin.label)}・${esc(t.dates.slice(0, 7))}</text></g></g>`; }).join("");
   const total = counties.length, done = visited.size;
+  const [bx, by] = P(120.08, 24.45), [wx, wy] = P(121.93, 23.35);
+  const critters = `
+    <g transform="translate(${bx} ${by})"><g class="boat">
+      <path class="hull" d="M-10 0 h20 l-4 5 h-12 z"/>
+      <path class="mast" d="M0 0 V-16"/>
+      <path class="sail" d="M1.5 -15 L10 -2 H1.5 z"/><path class="sail" d="M-1.5 -12 L-8 -2 H-1.5 z"/>
+    </g></g>
+    <g transform="translate(${wx} ${wy})"><g class="whale">
+      <path class="spout" d="M-2 -13 v-5 M-5 -12 l-3 -4 M1 -12 l3 -4"/>
+      <path class="body" d="M-13 0 q1 -10 13 -10 q11 0 13 7 q3 -7 8 -7 q-1 6 -5 9 q-10 9 -29 1z"/>
+      <circle class="eye-w" cx="-6" cy="-4" r="1.2"/>
+    </g></g>`;
   destroyMap();
   mapbox.classList.add("tw");
   mapbox.innerHTML = `<svg viewBox="-20 -10 ${W + 40} ${H + 20}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="台灣旅程地圖">
     <defs><pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
       <rect width="6" height="6" class="hatch-bg"/><line x1="0" y1="0" x2="0" y2="6" class="hatch-line"/></pattern></defs>
     <g class="waves">${waves}</g>
+    ${critters}
     <path class="land-shadow" d="${shadow}" transform="translate(5 6)"/>
     ${shapes}${labels}${pins}
     <g class="cartouche" transform="translate(4 14)">
@@ -484,13 +567,13 @@ function placeCard(p, index) {
   const kd = KINDS[p.kind];
   const tags = (p.age ? `<span class="age">${esc(p.age)}</span>` : "") + (p.tags || []).map(t => `<span>${esc(t)}</span>`).join("");
   return `<div class="place" data-place="${p.id}" id="place-${p.id}" tabindex="0" role="button" aria-label="${esc(p.name)}">
-      <span class="row"><span class="name">${esc(p.name)}</span><span class="kind" style="background:${kd.color}">${kd.label}</span>${p.day ? `<span class="day">${esc(p.day)}</span>` : ""}</span>
+      <span class="row"><span class="name">${esc(p.name)}</span><span class="kind" style="background:${kd.color}">${ic(p.kind)}${kd.label}</span>${p.day ? `<span class="day">${esc(p.day)}</span>` : ""}</span>
       ${p.nick ? `<span class="nick">孩子叫它「${esc(p.nick)}」</span>` : ""}
       <p>${esc(p.note)}</p>
-      ${p.tip ? `<span class="tip">提醒：${esc(p.tip)}</span>` : ""}
+      ${p.tip ? `<span class="tip">${ic("bulb")}<span>${esc(p.tip)}</span></span>` : ""}
       ${p.address || p.area ? `<span class="addr">${esc(p.address || p.area)}</span>` : ""}
       ${tags ? `<span class="tags">${tags}</span>` : ""}
-      <a class="gmap" href="${gmap(p)}" target="_blank" rel="noopener">在 Google 地圖查看</a>
+      <a class="gmap" href="${gmap(p)}" target="_blank" rel="noopener">${ic("pin")}在 Google 地圖查看</a>
     </div>`;
 }
 
@@ -512,20 +595,20 @@ function renderTrip(t) {
     <section class="trip-head">
       <p class="region">${esc(t.region)}</p>
       <h2>${esc(t.title)}</h2>
-      <ul class="facts"><li>${esc(t.dates)}</li><li>${esc(t.length)}</li><li>交通：${t.transport.map(esc).join("＋")}</li></ul>
+      <ul class="facts"><li>${ic("calendar")}${esc(t.dates)}</li><li>${ic("moon")}${esc(t.length)}</li><li>${ic("move")}${t.transport.map(esc).join("＋")}</li></ul>
       <p class="lead">${esc(t.lead)}</p>
-      ${t.blog ? `<a class="blog-link" href="${esc(t.blog.url)}" target="_blank" rel="noopener">完整遊記：${esc(t.blog.title)} →</a>` : ""}
+      ${t.blog ? `<a class="blog-link" href="${esc(t.blog.url)}" target="_blank" rel="noopener">${ic("book")}完整遊記：${esc(t.blog.title)} →</a>` : ""}
     </section>
     <section class="route">
-      <h3>${esc(t.route.title)}</h3>
+      <h3>${ic("walk")}${esc(t.route.title)}</h3>
       <p class="sub">${esc(t.route.sub)}</p>
-      ${t.route.how ? `<div class="howto"><h4>怎麼陪孩子走完 2 公里</h4><ul>${t.route.how.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : ""}
+      ${t.route.how ? `<div class="howto"><h4>${ic("walk")}怎麼陪孩子走完 2 公里</h4><ul>${t.route.how.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : ""}
       <ol class="stops">${routeStops}</ol>
-      ${t.route.tips ? `<div class="howto tips"><h4>出發前的小提醒</h4><ul>${t.route.tips.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : ""}
+      ${t.route.tips ? `<div class="howto tips"><h4>${ic("bulb")}出發前的小提醒</h4><ul>${t.route.tips.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : ""}
     </section>
-    ${others ? `<section class="others"><h3>其他去過的地方</h3><ul class="other-list">${others}</ul></section>` : ""}
-    ${wishes ? `<section class="others"><h3>這次沒去成，下次想去</h3><ul class="other-list">${wishes}</ul></section>` : ""}
-    ${t.story ? `<section class="story-box"><h3>${esc(t.story.title)}</h3>${[].concat(t.story.text).map(x => `<p>${esc(x)}</p>`).join("")}${t.blog ? `<a class="blog-link" href="${esc(t.blog.url)}" target="_blank" rel="noopener">在部落格閱讀完整遊記 →</a>` : ""}</section>` : ""}
+    ${others ? `<section class="others"><h3>${ic("pin")}其他去過的地方</h3><ul class="other-list">${others}</ul></section>` : ""}
+    ${wishes ? `<section class="others"><h3>${ic("wish")}這次沒去成，下次想去</h3><ul class="other-list">${wishes}</ul></section>` : ""}
+    ${t.story ? `<section class="story-box"><h3>${ic("pen")}${esc(t.story.title)}</h3>${[].concat(t.story.text).map(x => `<p>${esc(x)}</p>`).join("")}${t.blog ? `<a class="blog-link" href="${esc(t.blog.url)}" target="_blank" rel="noopener">${ic("book")}在部落格閱讀完整遊記 →</a>` : ""}</section>` : ""}
     <footer class="foot">點地點下方的連結，可在 Google 地圖查看路線與營業資訊。</footer>`;
   document.getElementById("backBtn").addEventListener("click", () => go(""));
   story.querySelectorAll(".place").forEach(b => b.addEventListener("click", e => {
@@ -651,8 +734,25 @@ function isDark() {
   const r = document.documentElement.getAttribute("data-theme");
   return r ? r === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
 }
-function destroyMap() { if (gmap2) { gmap2.remove(); gmap2 = null; gmarkers = {}; } }
+function destroyMap() { clearInterval(dashTimer); if (gmap2) { gmap2.remove(); gmap2 = null; gmarkers = {}; } }
 
+// 路線虛線緩緩前進，像在走路（減少動態設定時不動）
+// 虛線圖樣：實線 0.6、間隔 2.2（以線寬為單位），每一步把圖樣往前推 0.35
+const DASH_SEQ = Array.from({ length: 8 }, (_, k) => {
+  const o = k * 0.35;
+  return o < 0.6 ? [0.6 - o, 2.2, o, 0] : [0, 2.2 - (o - 0.6), 0.6, o - 0.6];
+});
+let dashTimer = null;
+function animateRoute() {
+  clearInterval(dashTimer);
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  let i = 0;
+  dashTimer = setInterval(() => {
+    if (!gmap2 || !gmap2.getLayer("route")) { clearInterval(dashTimer); return; }
+    i = (i + 1) % DASH_SEQ.length;
+    gmap2.setPaintProperty("route", "line-dasharray", DASH_SEQ[i]);
+  }, 110);
+}
 function addRoute(t) {
   const byId = Object.fromEntries(t.places.map(p => [p.id, p]));
   const coords = t.route.stops.map(id => [byId[id].lon, byId[id].lat]);
@@ -660,8 +760,9 @@ function addRoute(t) {
   gmap2.addSource("route", { type: "geojson", data: { type: "Feature", geometry: { type: "LineString", coordinates: coords } } });
   gmap2.addLayer({ id: "route-glow", type: "line", source: "route", layout: { "line-cap": "round", "line-join": "round" },
     paint: { "line-color": isDark() ? "#f0a944" : "#e8962a", "line-width": 10, "line-opacity": 0.18 } });
-  gmap2.addLayer({ id: "route", type: "line", source: "route", layout: { "line-cap": "round", "line-join": "round" },
-    paint: { "line-color": isDark() ? "#f0a944" : "#e8962a", "line-width": 4, "line-dasharray": [0.6, 2.2] } });
+  gmap2.addLayer({ id: "route", type: "line", source: "route", layout: { "line-cap": "butt", "line-join": "round" },
+    paint: { "line-color": isDark() ? "#f0a944" : "#e8962a", "line-width": 4, "line-dasharray": DASH_SEQ[0] } });
+  animateRoute();
 }
 
 async function drawLocal(t) {
@@ -689,7 +790,7 @@ async function drawLocal(t) {
   t.places.filter(p => !p.offMap).forEach(p => {
     const kd = KINDS[p.kind], idx = t.route.stops.indexOf(p.id);
     const el = document.createElement("div");
-    el.className = "lmk" + (p.labelLeft ? " left" : "") + (p.wish ? " wish" : ""); el.dataset.place = p.id; el.tabIndex = 0; el.setAttribute("role", "button"); el.setAttribute("aria-label", p.name);
+    el.className = "lmk" + (p.labelLeft ? " left" : "") + (p.wish ? " wish" : ""); el.style.setProperty("--i", idx >= 0 ? idx : t.route.stops.length + 1); el.dataset.place = p.id; el.tabIndex = 0; el.setAttribute("role", "button"); el.setAttribute("aria-label", p.name);
     el.innerHTML = `<div class="b" style="background:${kd.color}">${idx >= 0 ? idx + 1 : kd.glyph}</div><div class="l">${esc(p.name.replace(/ GUNGUN FONDUE/, ""))}</div>`;
     el.addEventListener("click", ev => { ev.stopPropagation(); setActive(p.id, true); });
     el.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); setActive(p.id, true); } });
