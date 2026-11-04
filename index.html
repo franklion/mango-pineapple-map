@@ -1,0 +1,758 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>芒果鳳梨散步地圖</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+/* Layout: 左側是故事欄（旅程清單／旅程詳情），右側是一張手繪感地圖；手機上地圖在上、故事在下。 */
+:root {
+  --paper: #f4f6ec;
+  --paper-2: #e9eddc;
+  --ink: #1f2a22;
+  --ink-soft: #55604f;
+  --line: #cdd4bd;
+  --mango: #e8962a;
+  --mango-ink: #8a4f06;
+  --leaf: #3d7a4c;
+  --stay: #3f74a6;
+  --food: #d4593d;
+  --play: #8a5cb8;
+  --park: #3d7a4c;
+  --move: #6b7466;
+  --card: #fbfcf6;
+  --sea: #dfe9e4;
+  --sea-line: #c3d5cc;
+  --land: #f3f1e4;
+  --land-hover: #ebe8d4;
+  --mango-soft: #fbe3bd;
+  --tile-filter: none;
+  --font-display: "LXGW WenKai TC", "Kaiti TC", "BiauKai", "Noto Serif TC", serif;
+  --font-body: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  --step--1: 0.8125rem;
+  --step-0: 0.9375rem;
+  --step-1: 1.125rem;
+  --step-2: 1.5rem;
+  --step-3: 2.125rem;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #171c17; --paper-2: #1f261f; --ink: #e8ecdf; --ink-soft: #a6b09c; --line: #364032;
+    --mango: #f0a944; --mango-ink: #f6c27a; --leaf: #7bbf88; --stay: #79a8d6; --food: #ec8a6f;
+    --play: #b892dd; --park: #7bbf88; --move: #9aa391; --card: #1c221c; --sea: #142226; --sea-line: #23383c; --land: #2a3227; --land-hover: #333d2f; --mango-soft: #4a3415; --tile-filter: invert(1) hue-rotate(180deg) brightness(.82) contrast(.92) saturate(.7); color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #171c17; --paper-2: #1f261f; --ink: #e8ecdf; --ink-soft: #a6b09c; --line: #364032;
+  --mango: #f0a944; --mango-ink: #f6c27a; --leaf: #7bbf88; --stay: #79a8d6; --food: #ec8a6f;
+  --play: #b892dd; --park: #7bbf88; --move: #9aa391; --card: #1c221c; --sea: #142226; --sea-line: #23383c; --land: #2a3227; --land-hover: #333d2f; --mango-soft: #4a3415; --tile-filter: invert(1) hue-rotate(180deg) brightness(.82) contrast(.92) saturate(.7); color-scheme: dark;
+}
+html, body { height: 100%; }
+body {
+  background: var(--paper); color: var(--ink);
+  font-family: var(--font-body); font-size: var(--step-0); line-height: 1.7;
+}
+.app {
+  display: grid; grid-template-columns: minmax(0, 470px) minmax(0, 1fr);
+  min-height: 100%;
+}
+.story {
+  padding-block: 28px 40px;
+  padding-left: max(24px, env(safe-area-inset-left, 0px));
+  padding-right: 24px;
+  border-right: 1px solid var(--line);
+  display: flex; flex-direction: column; gap: 24px; min-width: 0;
+}
+.stage {
+  position: sticky; top: env(safe-area-inset-top, 0px);
+  height: calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  padding: 24px;
+  padding-right: max(24px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 10px; min-width: 0;
+}
+.mapbox {
+  flex: 1; min-height: 0; border-radius: 18px; background: var(--paper-2);
+  border: 1px solid var(--line); position: relative; overflow: hidden;
+}
+.mapbox svg { width: 100%; height: 100%; display: block; }
+.map-note { font-size: var(--step--1); color: var(--ink-soft); }
+
+header.brand { display: flex; flex-direction: column; gap: 6px; }
+.brand h1 {
+  font-family: var(--font-display); font-weight: 700; font-size: var(--step-3);
+  line-height: 1.2; margin: 0; text-wrap: balance; letter-spacing: 0.02em;
+}
+.brand h1 .m { color: var(--mango-ink); }
+.brand h1 .p { color: var(--leaf); }
+.brand .tag { font-family: var(--font-display); font-size: var(--step-1); margin: 0; color: var(--ink); }
+.brand .motto { margin: 0; color: var(--ink-soft); font-size: var(--step--1); max-width: 40ch; }
+
+.section-label {
+  font-size: var(--step--1); letter-spacing: 0.12em; color: var(--ink-soft);
+  margin: 0; font-weight: 500;
+}
+
+.trip-list { display: flex; flex-direction: column; gap: 12px; list-style: none; margin: 0; padding: 0; }
+.trip-card {
+  display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; align-items: start;
+  text-align: left; width: 100%; font: inherit; color: inherit; cursor: pointer;
+  background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px;
+  transition: border-color .15s, transform .15s;
+}
+.trip-card:hover { border-color: var(--mango); transform: translateY(-1px); }
+.trip-card:focus-visible, button:focus-visible, a:focus-visible { outline: 2px solid var(--mango); outline-offset: 2px; }
+.trip-card .stamp {
+  grid-row: span 3; width: 52px; height: 52px; border-radius: 50%;
+  border: 2px dashed var(--mango); color: var(--mango-ink);
+  display: grid; place-items: center; font-family: var(--font-display); font-weight: 700; font-size: 1.125rem;
+}
+.trip-card h3 { margin: 0; font-family: var(--font-display); font-size: var(--step-1); line-height: 1.35; }
+.trip-card .meta { font-size: var(--step--1); color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.trip-card .hook { margin: 0; font-size: var(--step--1); }
+
+.empty-hint {
+  font-size: var(--step--1); color: var(--ink-soft); border: 1px dashed var(--line);
+  border-radius: 14px; padding: 14px 16px; margin: 0;
+}
+
+/* Trip detail */
+.back {
+  align-self: flex-start; font: inherit; font-size: var(--step--1); color: var(--ink-soft);
+  background: none; border: 0; padding: 4px 0; cursor: pointer;
+}
+.back:hover { color: var(--ink); }
+.trip-head { display: flex; flex-direction: column; gap: 8px; }
+.trip-head .region { font-size: var(--step--1); color: var(--mango-ink); letter-spacing: 0.08em; margin: 0; font-weight: 500; }
+.trip-head h2 { margin: 0; font-family: var(--font-display); font-size: var(--step-2); line-height: 1.3; text-wrap: balance; }
+.facts { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.facts li {
+  font-size: var(--step--1); padding: 2px 10px; border-radius: 999px;
+  background: var(--paper-2); border: 1px solid var(--line); font-variant-numeric: tabular-nums;
+}
+.lead { margin: 0; max-width: 62ch; }
+
+.route { display: flex; flex-direction: column; gap: 10px; }
+.route h3, .others h3 { margin: 0; font-family: var(--font-display); font-size: var(--step-1); }
+.route .sub { margin: 0; font-size: var(--step--1); color: var(--ink-soft); }
+.stops { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.stop {
+  display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 12px; position: relative;
+}
+.stop:not(:last-child)::before {
+  content: ""; position: absolute; left: 16px; top: 34px; bottom: -2px;
+  border-left: 2px dotted var(--mango);
+}
+.stop .dot {
+  width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
+  font-family: var(--font-display); font-weight: 700; color: #fff; font-size: 0.95rem;
+  position: relative; z-index: 1;
+}
+.place {
+  font: inherit; color: inherit; text-align: left; width: 100%; cursor: pointer;
+  background: transparent; border: 1px solid transparent; border-radius: 12px;
+  padding: 4px 10px 14px; display: flex; flex-direction: column; gap: 4px;
+}
+.place:focus-visible { outline: 2px solid var(--mango); outline-offset: 2px; }
+.place:hover { background: var(--card); border-color: var(--line); }
+.place.active { background: var(--card); border-color: var(--mango); }
+.place .row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px; }
+.place .name { font-weight: 700; font-size: var(--step-0); }
+.kind {
+  font-size: 0.75rem; padding: 0 8px; border-radius: 999px; color: #fff; letter-spacing: 0.05em; line-height: 1.6;
+}
+.place p { margin: 0; font-size: var(--step--1); color: var(--ink); }
+.place .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.place .tags span {
+  font-size: 0.75rem; color: var(--mango-ink); border: 1px solid var(--mango); border-radius: 999px; padding: 0 8px;
+}
+.place .addr { font-size: 0.75rem; color: var(--ink-soft); }
+.place .gmap { font-size: 0.75rem; color: var(--ink-soft); text-decoration: underline; text-underline-offset: 2px; }
+.place .gmap:hover { color: var(--ink); }
+.others { display: flex; flex-direction: column; gap: 10px; }
+.other-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.other-list li { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 12px; }
+
+.story-box {
+  background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.story-box h3 { margin: 0; font-family: var(--font-display); font-size: var(--step-1); color: var(--leaf); }
+.story-box p { margin: 0; font-family: var(--font-display); font-size: 1.0625rem; line-height: 1.85; }
+
+
+.place .nick { font-family: var(--font-display); font-size: var(--step--1); color: var(--leaf); }
+.place .tip { font-size: 0.75rem; color: var(--mango-ink); }
+.place .tags span.age { background: var(--leaf); border-color: var(--leaf); color: #fff; }
+.blog-link { font-size: var(--step--1); color: var(--mango-ink); font-weight: 500; text-decoration: underline; text-underline-offset: 3px; align-self: flex-start; }
+.blog-link:hover { color: var(--ink); }
+.howto { background: var(--paper-2); border-radius: 12px; padding: 12px 16px; }
+.howto h4 { margin: 0 0 4px; font-family: var(--font-display); font-size: var(--step-0); }
+.howto ul { margin: 0; padding-left: 1.2em; font-size: var(--step--1); display: flex; flex-direction: column; gap: 2px; }
+.howto.tips { border: 1px dashed var(--mango); background: transparent; }
+.story-box p + p { margin-top: 4px; }
+
+.other-list .dot { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-family: var(--font-display); font-weight: 700; }
+.dot.wish { border: 2px dashed var(--ink-soft); color: var(--ink-soft) !important; }
+.place .day { font-size: 0.75rem; padding: 0 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.lmk.wish .b { background: var(--card) !important; color: var(--ink-soft); border: 2px dashed var(--ink-soft); box-shadow: none; }
+.lmk.wish .l { color: var(--ink-soft); font-weight: 500; border-style: dashed; }
+
+.compact-labels .lmk .l { display: none; }
+.compact-labels .lmk.active .l { display: block; }
+@media (max-width: 820px) {
+  .stage { height: 64vh; }
+  .county-label { font-size: 13px; }
+  .county-label.on { font-size: 15px; }
+  .pin .flag text { font-size: 16px; }
+  .cartouche .c-title { font-size: 15px; }
+}
+footer.foot { margin-top: auto; font-size: 0.75rem; color: var(--ink-soft); }
+
+/* SVG map styling */
+.waves path { fill: none; stroke: var(--sea-line); stroke-width: 1; }
+.mapbox.tw { background: var(--sea); }
+.land-shadow { fill: var(--sea-line); opacity: .55; }
+.county { fill: var(--land); stroke: var(--card); stroke-width: 1.1; stroke-linejoin: round; transition: fill .2s; }
+.county:hover { fill: var(--land-hover); }
+.county.visited { fill: url(#hatch); stroke: var(--mango); stroke-width: 1.6; }
+.hatch-bg { fill: var(--mango-soft); }
+.hatch-line { stroke: var(--mango); stroke-width: 2; opacity: .55; }
+.county-label { fill: var(--ink-soft); font-size: 10.5px; font-family: var(--font-display); text-anchor: middle; dominant-baseline: central; pointer-events: none; letter-spacing: .1em; }
+.county-label.on { fill: var(--mango-ink); font-weight: 700; font-size: 12px; }
+.pin .drop { fill: var(--mango); stroke: var(--card); stroke-width: 2; }
+.pin .eye { fill: var(--card); }
+.pin .flag rect { fill: var(--card); stroke: var(--mango); stroke-width: 1.5; }
+.pin .flag text { fill: var(--ink); font-family: var(--font-display); font-weight: 700; font-size: 13px; }
+.pin:hover .flag rect, .pin:focus .flag rect { fill: var(--mango-soft); }
+.cartouche .c-title { fill: var(--ink-soft); font-size: 12px; font-family: var(--font-display); letter-spacing: .15em; }
+.cartouche .c-num { fill: var(--mango-ink); font-size: 30px; font-family: var(--font-display); font-weight: 700; }
+.cartouche .c-of { fill: var(--ink-soft); font-size: 16px; }
+.compass .rose-ring { fill: none; stroke: var(--ink-soft); stroke-width: 1; stroke-dasharray: 2 3; }
+.compass .rose { fill: var(--card); stroke: var(--ink-soft); stroke-width: 1; }
+.compass .rose-n { fill: var(--mango); }
+
+.land { fill: var(--card); stroke: var(--ink-soft); stroke-width: 1.4; stroke-linejoin: round; }
+.sea-lines line { stroke: var(--line); stroke-width: 1; }
+.city-dot { fill: var(--ink-soft); }
+.city-label { fill: var(--ink-soft); font-size: 12px; font-family: var(--font-body); }
+.pin-label { fill: var(--ink); font-family: var(--font-display); font-weight: 700; font-size: 15px; }
+.pin { cursor: pointer; }
+.pin circle.halo { fill: var(--mango); opacity: .22; }
+.pin circle.core { fill: var(--mango); stroke: var(--card); stroke-width: 3; }
+.grid-line { stroke: var(--line); stroke-width: 1; }
+.route-line { fill: none; stroke: var(--mango); stroke-width: 3; stroke-dasharray: 2 9; stroke-linecap: round; }
+.marker { cursor: pointer; }
+.marker .bg { stroke: var(--card); stroke-width: 3; }
+.marker text.glyph { fill: #fff; font-family: var(--font-display); font-weight: 700; font-size: 14px; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+.marker text.lbl { fill: var(--ink); font-size: 12.5px; font-family: var(--font-body); font-weight: 500; paint-order: stroke; stroke: var(--paper-2); stroke-width: 4px; stroke-linejoin: round; }
+.marker.active .bg { stroke: var(--mango); stroke-width: 4; }
+.scale text, .compass text { fill: var(--ink-soft); font-size: 11px; font-family: var(--font-body); }
+.scale line, .compass path { stroke: var(--ink-soft); stroke-width: 1.5; fill: none; }
+.offmap text { fill: var(--ink-soft); font-size: 12px; font-family: var(--font-body); }
+.offmap path { stroke: var(--ink-soft); stroke-width: 1.5; fill: none; }
+
+@media (max-width: 820px) {
+  .app { grid-template-columns: minmax(0, 1fr); }
+  .stage {
+    position: relative; top: 0; height: 52vh; min-height: 320px; order: -1;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 16px 0;
+  }
+  .story {
+    border-right: 0;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 20px 32px;
+  }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* MapLibre GL 4.7.1 */
+.maplibregl-map{font:12px/20px Helvetica Neue,Arial,Helvetica,sans-serif;overflow:hidden;position:relative;-webkit-tap-highlight-color:rgb(0 0 0/0)}.maplibregl-canvas{left:0;position:absolute;top:0}.maplibregl-map:fullscreen{height:100%;width:100%}.maplibregl-ctrl-group button.maplibregl-ctrl-compass{touch-action:none}.maplibregl-canvas-container.maplibregl-interactive,.maplibregl-ctrl-group button.maplibregl-ctrl-compass{cursor:grab;-webkit-user-select:none;-moz-user-select:none;user-select:none}.maplibregl-canvas-container.maplibregl-interactive.maplibregl-track-pointer{cursor:pointer}.maplibregl-canvas-container.maplibregl-interactive:active,.maplibregl-ctrl-group button.maplibregl-ctrl-compass:active{cursor:grabbing}.maplibregl-canvas-container.maplibregl-touch-zoom-rotate,.maplibregl-canvas-container.maplibregl-touch-zoom-rotate .maplibregl-canvas{touch-action:pan-x pan-y}.maplibregl-canvas-container.maplibregl-touch-drag-pan,.maplibregl-canvas-container.maplibregl-touch-drag-pan .maplibregl-canvas{touch-action:pinch-zoom}.maplibregl-canvas-container.maplibregl-touch-zoom-rotate.maplibregl-touch-drag-pan,.maplibregl-canvas-container.maplibregl-touch-zoom-rotate.maplibregl-touch-drag-pan .maplibregl-canvas{touch-action:none}.maplibregl-canvas-container.maplibregl-touch-drag-pan.maplibregl-cooperative-gestures,.maplibregl-canvas-container.maplibregl-touch-drag-pan.maplibregl-cooperative-gestures .maplibregl-canvas{touch-action:pan-x pan-y}.maplibregl-ctrl-bottom-left,.maplibregl-ctrl-bottom-right,.maplibregl-ctrl-top-left,.maplibregl-ctrl-top-right{pointer-events:none;position:absolute;z-index:2}.maplibregl-ctrl-top-left{left:0;top:0}.maplibregl-ctrl-top-right{right:0;top:0}.maplibregl-ctrl-bottom-left{bottom:0;left:0}.maplibregl-ctrl-bottom-right{bottom:0;right:0}.maplibregl-ctrl{clear:both;pointer-events:auto;transform:translate(0)}.maplibregl-ctrl-top-left .maplibregl-ctrl{float:left;margin:10px 0 0 10px}.maplibregl-ctrl-top-right .maplibregl-ctrl{float:right;margin:10px 10px 0 0}.maplibregl-ctrl-bottom-left .maplibregl-ctrl{float:left;margin:0 0 10px 10px}.maplibregl-ctrl-bottom-right .maplibregl-ctrl{float:right;margin:0 10px 10px 0}.maplibregl-ctrl-group{background:#fff;border-radius:4px}.maplibregl-ctrl-group:not(:empty){box-shadow:0 0 0 2px rgba(0,0,0,.1)}@media (forced-colors:active){.maplibregl-ctrl-group:not(:empty){box-shadow:0 0 0 2px ButtonText}}.maplibregl-ctrl-group button{background-color:transparent;border:0;box-sizing:border-box;cursor:pointer;display:block;height:29px;outline:none;padding:0;width:29px}.maplibregl-ctrl-group button+button{border-top:1px solid #ddd}.maplibregl-ctrl button .maplibregl-ctrl-icon{background-position:50%;background-repeat:no-repeat;display:block;height:100%;width:100%}@media (forced-colors:active){.maplibregl-ctrl-icon{background-color:transparent}.maplibregl-ctrl-group button+button{border-top:1px solid ButtonText}}.maplibregl-ctrl button::-moz-focus-inner{border:0;padding:0}.maplibregl-ctrl-attrib-button:focus,.maplibregl-ctrl-group button:focus{box-shadow:0 0 2px 2px #0096ff}.maplibregl-ctrl button:disabled{cursor:not-allowed}.maplibregl-ctrl button:disabled .maplibregl-ctrl-icon{opacity:.25}.maplibregl-ctrl button:not(:disabled):hover{background-color:rgb(0 0 0/5%)}.maplibregl-ctrl-group button:focus:focus-visible{box-shadow:0 0 2px 2px #0096ff}.maplibregl-ctrl-group button:focus:not(:focus-visible){box-shadow:none}.maplibregl-ctrl-group button:focus:first-child{border-radius:4px 4px 0 0}.maplibregl-ctrl-group button:focus:last-child{border-radius:0 0 4px 4px}.maplibregl-ctrl-group button:focus:only-child{border-radius:inherit}.maplibregl-ctrl button.maplibregl-ctrl-zoom-out .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%23333' viewBox='0 0 29 29'%3E%3Cpath d='M10 13c-.75 0-1.5.75-1.5 1.5S9.25 16 10 16h9c.75 0 1.5-.75 1.5-1.5S19.75 13 19 13z'/%3E%3C/svg%3E")}.maplibregl-ctrl button.maplibregl-ctrl-zoom-in .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%23333' viewBox='0 0 29 29'%3E%3Cpath d='M14.5 8.5c-.75 0-1.5.75-1.5 1.5v3h-3c-.75 0-1.5.75-1.5 1.5S9.25 16 10 16h3v3c0 .75.75 1.5 1.5 1.5S16 19.75 16 19v-3h3c.75 0 1.5-.75 1.5-1.5S19.75 13 19 13h-3v-3c0-.75-.75-1.5-1.5-1.5'/%3E%3C/svg%3E")}@media (forced-colors:active){.maplibregl-ctrl button.maplibregl-ctrl-zoom-out .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%23fff' viewBox='0 0 29 29'%3E%3Cpath d='M10 13c-.75 0-1.5.75-1.5 1.5S9.25 16 10 16h9c.75 0 1.5-.75 1.5-1.5S19.75 13 19 13z'/%3E%3C/svg%3E")}.maplibregl-ctrl button.maplibregl-ctrl-zoom-in .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%23fff' viewBox='0 0 29 29'%3E%3Cpath d='M14.5 8.5c-.75 0-1.5.75-1.5 1.5v3h-3c-.75 0-1.5.75-1.5 1.5S9.25 16 10 16h3v3c0 .75.75 1.5 1.5 1.5S16 19.75 16 19v-3h3c.75 0 1.5-.75 1.5-1.5S19.75 13 19 13h-3v-3c0-.75-.75-1.5-1.5-1.5'/%3E%3C/svg%3E")}}@media (forced-colors:active) and (prefers-color-scheme:light){.maplibregl-ctrl button.maplibregl-ctrl-zoom-out .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' viewBox='0 0 29 29'%3E%3Cpath d='M10 13c-.75 0-1.5.75-1.5 1.5S9.25 16 10 16h9c.75 0 1.5-.75 1.5-1.5S19.75 13 19 13z'/%3E%3C/svg%3E")}.maplibregl-ctrl button.maplibregl-ctrl-zoom-in .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' viewBox='0 0 29 29'%3E%3Cpath d='M14.5 8.5c-.75 0-1.5.75-1.5 1.5v3h-3c-.75 0-1.5.75-1.5 1.5S9.25 16 10 16h3v3c0 .75.75 1.5 1.5 1.5S16 19.75 16 19v-3h3c.75 0 1.5-.75 1.5-1.5S19.75 13 19 13h-3v-3c0-.75-.75-1.5-1.5-1.5'/%3E%3C/svg%3E")}}.maplibregl-ctrl button.maplibregl-ctrl-fullscreen .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%23333' viewBox='0 0 29 29'%3E%3Cpath d='M24 16v5.5c0 1.75-.75 2.5-2.5 2.5H16v-1l3-1.5-4-5.5 1-1 5.5 4 1.5-3zM6 16l1.5 3 5.5-4 1 1-4 5.5 3 1.5v1H7.5C5.75 24 5 23.25 5 21.5V16zm7-11v1l-3 1.5 4 5.5-1 1-5.5-4L6 13H5V7.5C5 5.75 5.75 5 7.5 5zm11 2.5c0-1.75-.75-2.5-2.5-2.5H16v1l3 1.5-4 5.5 1 1 5.5-4 1.5 3h1z'/%3E%3C/svg%3E")}.maplibregl-ctrl button.maplibregl-ctrl-shrink .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' viewBox='0 0 29 29'%3E%3Cpath d='M18.5 16c-1.75 0-2.5.75-2.5 2.5V24h1l1.5-3 5.5 4 1-1-4-5.5 3-1.5v-1zM13 18.5c0-1.75-.75-2.5-2.5-2.5H5v1l3 1.5L4 24l1 1 5.5-4 1.5 3h1zm3-8c0 1.75.75 2.5 2.5 2.5H24v-1l-3-1.5L25 5l-1-1-5.5 4L17 5h-1zM10.5 13c1.75 0 2.5-.75 2.5-2.5V5h-1l-1.5 3L5 4 4 5l4 5.5L5 12v1z'/%3E%3C/svg%3E")}@media (forced-colors:active){.maplibregl-ctrl button.maplibregl-ctrl-fullscreen .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%23fff' viewBox='0 0 29 29'%3E%3Cpath d='M24 16v5.5c0 1.75-.75 2.5-2.5 2.5H16v-1l3-1.5-4-5.5 1-1 5.5 4 1.5-3zM6 16l1.5 3 5.5-4 1 1-4 5.5 3 1.5v1H7.5C5.75 24 5 23.25 5 21.5V16zm7-11v1l-3 1.5 4 5.5-1 1-5.5-4L6 13H5V7.5C5 5.75 5.75 5 7.5 5zm11 2.5c0-1.75-.75-2.5-2.5-2.5H16v1l3 1.5-4 5.5 1 1 5.5-4 1.5 3h1z'/%3E%3C/svg%3E")}.maplibregl-ctrl button.maplibregl-ctrl-shrink .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%23fff' viewBox='0 0 29 29'%3E%3Cpath d='M18.5 16c-1.75 0-2.5.75-2.5 2.5V24h1l1.5-3 5.5 4 1-1-4-5.5 3-1.5v-1zM13 18.5c0-1.75-.75-2.5-2.5-2.5H5v1l3 1.5L4 24l1 1 5.5-4 1.5 3h1zm3-8c0 1.75.75 2.5 2.5 2.5H24v-1l-3-1.5L25 5l-1-1-5.5 4L17 5h-1zM10.5 13c1.75 0 2.5-.75 2.5-2.5V5h-1l-1.5 3L5 4 4 5l4 5.5L5 12v1z'/%3E%3C/svg%3E")}}@media (forced-colors:active) and (prefers-color-scheme:light){.maplibregl-ctrl button.maplibregl-ctrl-fullscreen .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' viewBox='0 0 29 29'%3E%3Cpath d='M24 16v5.5c0 1.75-.75 2.5-2.5 2.5H16v-1l3-1.5-4-5.5 1-1 5.5 4 1.5-3zM6 16l1.5 3 5.5-4 1 1-4 5.5 3 1.5v1H7.5C5.75 24 5 23.25 5 21.5V16zm7-11v1l-3 1.5 4 5.5-1 1-5.5-4L6 13H5V7.5C5 5.75 5.75 5 7.5 5zm11 2.5c0-1.75-.75-2.5-2.5-2.5H16v1l3 1.5-4 5.5 1 1 5.5-4 1.5 3h1z'/%3E%3C/svg%3E")}.maplibregl-ctrl button.maplibregl-ctrl-shrink .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' viewBox='0 0 29 29'%3E%3Cpath d='M18.5 16c-1.75 0-2.5.75-2.5 2.5V24h1l1.5-3 5.5 4 1-1-4-5.5 3-1.5v-1zM13 18.5c0-1.75-.75-2.5-2.5-2.5H5v1l3 1.5L4 24l1 1 5.5-4 1.5 3h1zm3-8c0 1.75.75 2.5 2.5 2.5H24v-1l-3-1.5L25 5l-1-1-5.5 4L17 5h-1zM10.5 13c1.75 0 2.5-.75 2.5-2.5V5h-1l-1.5 3L5 4 4 5l4 5.5L5 12v1z'/%3E%3C/svg%3E")}}.maplibregl-ctrl button.maplibregl-ctrl-compass .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%23333' viewBox='0 0 29 29'%3E%3Cpath d='m10.5 14 4-8 4 8z'/%3E%3Cpath fill='%23ccc' d='m10.5 16 4 8 4-8z'/%3E%3C/svg%3E")}@media (forced-colors:active){.maplibregl-ctrl button.maplibregl-ctrl-compass .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%23fff' viewBox='0 0 29 29'%3E%3Cpath d='m10.5 14 4-8 4 8z'/%3E%3Cpath fill='%23ccc' d='m10.5 16 4 8 4-8z'/%3E%3C/svg%3E")}}@media (forced-colors:active) and (prefers-color-scheme:light){.maplibregl-ctrl button.maplibregl-ctrl-compass .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' viewBox='0 0 29 29'%3E%3Cpath d='m10.5 14 4-8 4 8z'/%3E%3Cpath fill='%23ccc' d='m10.5 16 4 8 4-8z'/%3E%3C/svg%3E")}}.maplibregl-ctrl button.maplibregl-ctrl-terrain .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' fill='%23333' viewBox='0 0 22 22'%3E%3Cpath d='m1.754 13.406 4.453-4.851 3.09 3.09 3.281 3.277.969-.969-3.309-3.312 3.844-4.121 6.148 6.886h1.082v-.855l-7.207-8.07-4.84 5.187L6.169 6.57l-5.48 5.965v.871ZM.688 16.844h20.625v1.375H.688Zm0 0'/%3E%3C/svg%3E")}.maplibregl-ctrl button.maplibregl-ctrl-terrain-enabled .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' fill='%2333b5e5' viewBox='0 0 22 22'%3E%3Cpath d='m1.754 13.406 4.453-4.851 3.09 3.09 3.281 3.277.969-.969-3.309-3.312 3.844-4.121 6.148 6.886h1.082v-.855l-7.207-8.07-4.84 5.187L6.169 6.57l-5.48 5.965v.871ZM.688 16.844h20.625v1.375H.688Zm0 0'/%3E%3C/svg%3E")}.maplibregl-ctrl button.maplibregl-ctrl-geolocate .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%23333' viewBox='0 0 20 20'%3E%3Cpath d='M10 4C9 4 9 5 9 5v.1A5 5 0 0 0 5.1 9H5s-1 0-1 1 1 1 1 1h.1A5 5 0 0 0 9 14.9v.1s0 1 1 1 1-1 1-1v-.1a5 5 0 0 0 3.9-3.9h.1s1 0 1-1-1-1-1-1h-.1A5 5 0 0 0 11 5.1V5s0-1-1-1m0 2.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 1 1 0-7'/%3E%3Ccircle cx='10' cy='10' r='2'/%3E%3C/svg%3E")}.maplibregl-ctrl button.maplibregl-ctrl-geolocate:disabled .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%23aaa' viewBox='0 0 20 20'%3E%3Cpath d='M10 4C9 4 9 5 9 5v.1A5 5 0 0 0 5.1 9H5s-1 0-1 1 1 1 1 1h.1A5 5 0 0 0 9 14.9v.1s0 1 1 1 1-1 1-1v-.1a5 5 0 0 0 3.9-3.9h.1s1 0 1-1-1-1-1-1h-.1A5 5 0 0 0 11 5.1V5s0-1-1-1m0 2.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 1 1 0-7'/%3E%3Ccircle cx='10' cy='10' r='2'/%3E%3Cpath fill='red' d='m14 5 1 1-9 9-1-1z'/%3E%3C/svg%3E")}.maplibregl-ctrl button.maplibregl-ctrl-geolocate.maplibregl-ctrl-geolocate-active .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%2333b5e5' viewBox='0 0 20 20'%3E%3Cpath d='M10 4C9 4 9 5 9 5v.1A5 5 0 0 0 5.1 9H5s-1 0-1 1 1 1 1 1h.1A5 5 0 0 0 9 14.9v.1s0 1 1 1 1-1 1-1v-.1a5 5 0 0 0 3.9-3.9h.1s1 0 1-1-1-1-1-1h-.1A5 5 0 0 0 11 5.1V5s0-1-1-1m0 2.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 1 1 0-7'/%3E%3Ccircle cx='10' cy='10' r='2'/%3E%3C/svg%3E")}.maplibregl-ctrl button.maplibregl-ctrl-geolocate.maplibregl-ctrl-geolocate-active-error .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%23e58978' viewBox='0 0 20 20'%3E%3Cpath d='M10 4C9 4 9 5 9 5v.1A5 5 0 0 0 5.1 9H5s-1 0-1 1 1 1 1 1h.1A5 5 0 0 0 9 14.9v.1s0 1 1 1 1-1 1-1v-.1a5 5 0 0 0 3.9-3.9h.1s1 0 1-1-1-1-1-1h-.1A5 5 0 0 0 11 5.1V5s0-1-1-1m0 2.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 1 1 0-7'/%3E%3Ccircle cx='10' cy='10' r='2'/%3E%3C/svg%3E")}.maplibregl-ctrl button.maplibregl-ctrl-geolocate.maplibregl-ctrl-geolocate-background .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%2333b5e5' viewBox='0 0 20 20'%3E%3Cpath d='M10 4C9 4 9 5 9 5v.1A5 5 0 0 0 5.1 9H5s-1 0-1 1 1 1 1 1h.1A5 5 0 0 0 9 14.9v.1s0 1 1 1 1-1 1-1v-.1a5 5 0 0 0 3.9-3.9h.1s1 0 1-1-1-1-1-1h-.1A5 5 0 0 0 11 5.1V5s0-1-1-1m0 2.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 1 1 0-7'/%3E%3C/svg%3E")}.maplibregl-ctrl button.maplibregl-ctrl-geolocate.maplibregl-ctrl-geolocate-background-error .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%23e54e33' viewBox='0 0 20 20'%3E%3Cpath d='M10 4C9 4 9 5 9 5v.1A5 5 0 0 0 5.1 9H5s-1 0-1 1 1 1 1 1h.1A5 5 0 0 0 9 14.9v.1s0 1 1 1 1-1 1-1v-.1a5 5 0 0 0 3.9-3.9h.1s1 0 1-1-1-1-1-1h-.1A5 5 0 0 0 11 5.1V5s0-1-1-1m0 2.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 1 1 0-7'/%3E%3C/svg%3E")}.maplibregl-ctrl button.maplibregl-ctrl-geolocate.maplibregl-ctrl-geolocate-waiting .maplibregl-ctrl-icon{animation:maplibregl-spin 2s linear infinite}@media (forced-colors:active){.maplibregl-ctrl button.maplibregl-ctrl-geolocate .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%23fff' viewBox='0 0 20 20'%3E%3Cpath d='M10 4C9 4 9 5 9 5v.1A5 5 0 0 0 5.1 9H5s-1 0-1 1 1 1 1 1h.1A5 5 0 0 0 9 14.9v.1s0 1 1 1 1-1 1-1v-.1a5 5 0 0 0 3.9-3.9h.1s1 0 1-1-1-1-1-1h-.1A5 5 0 0 0 11 5.1V5s0-1-1-1m0 2.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 1 1 0-7'/%3E%3Ccircle cx='10' cy='10' r='2'/%3E%3C/svg%3E")}.maplibregl-ctrl button.maplibregl-ctrl-geolocate:disabled .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%23999' viewBox='0 0 20 20'%3E%3Cpath d='M10 4C9 4 9 5 9 5v.1A5 5 0 0 0 5.1 9H5s-1 0-1 1 1 1 1 1h.1A5 5 0 0 0 9 14.9v.1s0 1 1 1 1-1 1-1v-.1a5 5 0 0 0 3.9-3.9h.1s1 0 1-1-1-1-1-1h-.1A5 5 0 0 0 11 5.1V5s0-1-1-1m0 2.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 1 1 0-7'/%3E%3Ccircle cx='10' cy='10' r='2'/%3E%3Cpath fill='red' d='m14 5 1 1-9 9-1-1z'/%3E%3C/svg%3E")}.maplibregl-ctrl button.maplibregl-ctrl-geolocate.maplibregl-ctrl-geolocate-active .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%2333b5e5' viewBox='0 0 20 20'%3E%3Cpath d='M10 4C9 4 9 5 9 5v.1A5 5 0 0 0 5.1 9H5s-1 0-1 1 1 1 1 1h.1A5 5 0 0 0 9 14.9v.1s0 1 1 1 1-1 1-1v-.1a5 5 0 0 0 3.9-3.9h.1s1 0 1-1-1-1-1-1h-.1A5 5 0 0 0 11 5.1V5s0-1-1-1m0 2.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 1 1 0-7'/%3E%3Ccircle cx='10' cy='10' r='2'/%3E%3C/svg%3E")}.maplibregl-ctrl button.maplibregl-ctrl-geolocate.maplibregl-ctrl-geolocate-active-error .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%23e58978' viewBox='0 0 20 20'%3E%3Cpath d='M10 4C9 4 9 5 9 5v.1A5 5 0 0 0 5.1 9H5s-1 0-1 1 1 1 1 1h.1A5 5 0 0 0 9 14.9v.1s0 1 1 1 1-1 1-1v-.1a5 5 0 0 0 3.9-3.9h.1s1 0 1-1-1-1-1-1h-.1A5 5 0 0 0 11 5.1V5s0-1-1-1m0 2.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 1 1 0-7'/%3E%3Ccircle cx='10' cy='10' r='2'/%3E%3C/svg%3E")}.maplibregl-ctrl button.maplibregl-ctrl-geolocate.maplibregl-ctrl-geolocate-background .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%2333b5e5' viewBox='0 0 20 20'%3E%3Cpath d='M10 4C9 4 9 5 9 5v.1A5 5 0 0 0 5.1 9H5s-1 0-1 1 1 1 1 1h.1A5 5 0 0 0 9 14.9v.1s0 1 1 1 1-1 1-1v-.1a5 5 0 0 0 3.9-3.9h.1s1 0 1-1-1-1-1-1h-.1A5 5 0 0 0 11 5.1V5s0-1-1-1m0 2.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 1 1 0-7'/%3E%3C/svg%3E")}.maplibregl-ctrl button.maplibregl-ctrl-geolocate.maplibregl-ctrl-geolocate-background-error .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%23e54e33' viewBox='0 0 20 20'%3E%3Cpath d='M10 4C9 4 9 5 9 5v.1A5 5 0 0 0 5.1 9H5s-1 0-1 1 1 1 1 1h.1A5 5 0 0 0 9 14.9v.1s0 1 1 1 1-1 1-1v-.1a5 5 0 0 0 3.9-3.9h.1s1 0 1-1-1-1-1-1h-.1A5 5 0 0 0 11 5.1V5s0-1-1-1m0 2.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 1 1 0-7'/%3E%3C/svg%3E")}}@media (forced-colors:active) and (prefers-color-scheme:light){.maplibregl-ctrl button.maplibregl-ctrl-geolocate .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' viewBox='0 0 20 20'%3E%3Cpath d='M10 4C9 4 9 5 9 5v.1A5 5 0 0 0 5.1 9H5s-1 0-1 1 1 1 1 1h.1A5 5 0 0 0 9 14.9v.1s0 1 1 1 1-1 1-1v-.1a5 5 0 0 0 3.9-3.9h.1s1 0 1-1-1-1-1-1h-.1A5 5 0 0 0 11 5.1V5s0-1-1-1m0 2.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 1 1 0-7'/%3E%3Ccircle cx='10' cy='10' r='2'/%3E%3C/svg%3E")}.maplibregl-ctrl button.maplibregl-ctrl-geolocate:disabled .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%23666' viewBox='0 0 20 20'%3E%3Cpath d='M10 4C9 4 9 5 9 5v.1A5 5 0 0 0 5.1 9H5s-1 0-1 1 1 1 1 1h.1A5 5 0 0 0 9 14.9v.1s0 1 1 1 1-1 1-1v-.1a5 5 0 0 0 3.9-3.9h.1s1 0 1-1-1-1-1-1h-.1A5 5 0 0 0 11 5.1V5s0-1-1-1m0 2.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 1 1 0-7'/%3E%3Ccircle cx='10' cy='10' r='2'/%3E%3Cpath fill='red' d='m14 5 1 1-9 9-1-1z'/%3E%3C/svg%3E")}}@keyframes maplibregl-spin{0%{transform:rotate(0deg)}to{transform:rotate(1turn)}}a.maplibregl-ctrl-logo{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='23' fill='none'%3E%3Cpath fill='%23000' fill-opacity='.4' fill-rule='evenodd' d='M17.408 16.796h-1.827l2.501-12.095h.198l3.324 6.533.988 2.19.988-2.19 3.258-6.533h.181l2.6 12.095h-1.81l-1.218-5.644-.362-1.71-.658 1.71-2.929 5.644h-.098l-2.914-5.644-.757-1.71-.345 1.71zm1.958-3.42-.726 3.663a1.255 1.255 0 0 1-1.232 1.011h-1.827a1.255 1.255 0 0 1-1.229-1.509l2.501-12.095a1.255 1.255 0 0 1 1.23-1.001h.197a1.25 1.25 0 0 1 1.12.685l3.19 6.273 3.125-6.263a1.25 1.25 0 0 1 1.123-.695h.181a1.255 1.255 0 0 1 1.227.991l1.443 6.71a5 5 0 0 1 .314-.787l.009-.016a4.6 4.6 0 0 1 1.777-1.887c.782-.46 1.668-.667 2.611-.667a4.6 4.6 0 0 1 1.7.32l.306.134c.21-.16.474-.256.759-.256h1.694a1.255 1.255 0 0 1 1.212.925 1.255 1.255 0 0 1 1.212-.925h1.711c.284 0 .545.094.755.252.613-.3 1.312-.45 2.075-.45 1.356 0 2.557.445 3.482 1.4q.47.48.763 1.064V4.701a1.255 1.255 0 0 1 1.255-1.255h1.86A1.255 1.255 0 0 1 54.44 4.7v9.194h2.217c.19 0 .37.043.532.118v-4.77c0-.356.147-.678.385-.906a2.42 2.42 0 0 1-.682-1.71c0-.665.267-1.253.735-1.7a2.45 2.45 0 0 1 1.722-.674 2.43 2.43 0 0 1 1.705.675q.318.302.504.683V4.7a1.255 1.255 0 0 1 1.255-1.255h1.744A1.255 1.255 0 0 1 65.812 4.7v3.335a4.8 4.8 0 0 1 1.526-.246c.938 0 1.817.214 2.59.69a4.47 4.47 0 0 1 1.67 1.743v-.98a1.255 1.255 0 0 1 1.256-1.256h1.777c.233 0 .451.064.639.174a3.4 3.4 0 0 1 1.567-.372c.346 0 .861.02 1.285.232a1.25 1.25 0 0 1 .689 1.004 4.7 4.7 0 0 1 .853-.588c.795-.44 1.675-.647 2.61-.647 1.385 0 2.65.39 3.525 1.396.836.938 1.168 2.173 1.168 3.528q-.001.515-.056 1.051a1.255 1.255 0 0 1-.947 1.09l.408.952a1.255 1.255 0 0 1-.477 1.552c-.418.268-.92.463-1.458.612-.613.171-1.304.244-2.049.244-1.06 0-2.043-.207-2.886-.698l-.015-.008c-.798-.48-1.419-1.135-1.818-1.963l-.004-.008a5.8 5.8 0 0 1-.548-2.512q0-.429.053-.843a1.3 1.3 0 0 1-.333-.086l-.166-.004c-.223 0-.426.062-.643.228-.03.024-.142.139-.142.59v3.883a1.255 1.255 0 0 1-1.256 1.256h-1.777a1.255 1.255 0 0 1-1.256-1.256V15.69l-.032.057a4.8 4.8 0 0 1-1.86 1.833 5.04 5.04 0 0 1-2.484.634 4.5 4.5 0 0 1-1.935-.424 1.25 1.25 0 0 1-.764.258h-1.71a1.255 1.255 0 0 1-1.256-1.255V7.687a2.4 2.4 0 0 1-.428.625c.253.23.412.561.412.93v7.553a1.255 1.255 0 0 1-1.256 1.255h-1.843a1.25 1.25 0 0 1-.894-.373c-.228.23-.544.373-.894.373H51.32a1.255 1.255 0 0 1-1.256-1.255v-1.251l-.061.117a4.7 4.7 0 0 1-1.782 1.884 4.77 4.77 0 0 1-2.485.67 5.6 5.6 0 0 1-1.485-.188l.009 2.764a1.255 1.255 0 0 1-1.255 1.259h-1.729a1.255 1.255 0 0 1-1.255-1.255v-3.537a1.255 1.255 0 0 1-1.167.793h-1.679a1.25 1.25 0 0 1-.77-.263 4.5 4.5 0 0 1-1.945.429c-.885 0-1.724-.21-2.495-.632l-.017-.01a5 5 0 0 1-1.081-.836 1.255 1.255 0 0 1-1.254 1.312h-1.81a1.255 1.255 0 0 1-1.228-.99l-.782-3.625-2.044 3.939a1.25 1.25 0 0 1-1.115.676h-.098a1.25 1.25 0 0 1-1.116-.68l-2.061-3.994zM35.92 16.63l.207-.114.223-.15q.493-.356.735-.785l.061-.118.033 1.332h1.678V9.242h-1.694l-.033 1.267q-.133-.329-.526-.658l-.032-.028a3.2 3.2 0 0 0-.668-.428l-.27-.12a3.3 3.3 0 0 0-1.235-.23q-1.136-.001-1.974.493a3.36 3.36 0 0 0-1.3 1.382q-.445.89-.444 2.074 0 1.2.51 2.107a3.8 3.8 0 0 0 1.382 1.381 3.9 3.9 0 0 0 1.893.477q.795 0 1.455-.33zm-2.789-5.38q-.576.675-.575 1.762 0 1.102.559 1.794.576.675 1.645.675a2.25 2.25 0 0 0 .934-.19 2.2 2.2 0 0 0 .468-.29l.178-.161a2.2 2.2 0 0 0 .397-.561q.244-.5.244-1.15v-.115q0-.708-.296-1.267l-.043-.077a2.2 2.2 0 0 0-.633-.709l-.13-.086-.047-.028a2.1 2.1 0 0 0-1.073-.285q-1.052 0-1.629.692zm2.316 2.706c.163-.17.28-.407.28-.83v-.114c0-.292-.06-.508-.15-.68a.96.96 0 0 0-.353-.389.85.85 0 0 0-.464-.127c-.4 0-.56.114-.664.239l-.01.012c-.148.174-.275.45-.275.945 0 .506.122.801.27.99.097.11.266.224.68.224.303 0 .504-.09.687-.269zm7.545 1.705a2.6 2.6 0 0 0 .331.423q.319.33.755.548l.173.074q.65.255 1.49.255 1.02 0 1.844-.493a3.45 3.45 0 0 0 1.316-1.4q.493-.904.493-2.089 0-1.909-.988-2.913-.988-1.02-2.584-1.02-.898 0-1.575.347a3 3 0 0 0-.415.262l-.199.166a3.4 3.4 0 0 0-.64.82V9.242h-1.712v11.553h1.729l-.017-5.134zm.53-1.138q.206.29.48.5l.155.11.053.034q.51.296 1.119.297 1.07 0 1.645-.675.577-.69.576-1.762 0-1.119-.576-1.777-.558-.675-1.645-.675-.435 0-.835.16a2 2 0 0 0-.284.136 2 2 0 0 0-.363.254 2.2 2.2 0 0 0-.46.569l-.082.162a2.6 2.6 0 0 0-.213 1.072v.115q0 .707.296 1.267l.135.211zm.964-.818a1.1 1.1 0 0 0 .367.385.94.94 0 0 0 .476.118c.423 0 .59-.117.687-.23.159-.194.28-.478.28-.95 0-.53-.133-.8-.266-.952l-.021-.025c-.078-.094-.231-.221-.68-.221a1 1 0 0 0-.503.135l-.012.007a.86.86 0 0 0-.335.343c-.073.133-.132.324-.132.614v.115a1.4 1.4 0 0 0 .14.66zm15.7-6.222q.347-.346.346-.856a1.05 1.05 0 0 0-.345-.79 1.18 1.18 0 0 0-.84-.329q-.51 0-.855.33a1.05 1.05 0 0 0-.346.79q0 .51.346.855.345.346.856.346.51 0 .839-.346zm4.337 9.314.033-1.332q.191.403.59.747l.098.081a4 4 0 0 0 .316.224l.223.122a3.2 3.2 0 0 0 1.44.322 3.8 3.8 0 0 0 1.875-.477 3.5 3.5 0 0 0 1.382-1.366q.527-.89.526-2.09 0-1.184-.444-2.073a3.24 3.24 0 0 0-1.283-1.399q-.823-.51-1.942-.51a3.5 3.5 0 0 0-1.527.344l-.086.043-.165.09a3 3 0 0 0-.33.214q-.432.315-.656.707a2 2 0 0 0-.099.198l.082-1.283V4.701h-1.744v12.095zm.473-2.509a2.5 2.5 0 0 0 .566.7q.117.098.245.18l.144.08a2.1 2.1 0 0 0 .975.232q1.07 0 1.645-.675.576-.69.576-1.778 0-1.102-.576-1.777-.56-.691-1.645-.692a2.2 2.2 0 0 0-1.015.235q-.22.113-.415.282l-.15.142a2.1 2.1 0 0 0-.42.594q-.223.479-.223 1.1v.115q0 .705.293 1.26zm2.616-.293c.157-.191.28-.479.28-.967 0-.51-.13-.79-.276-.961l-.021-.026c-.082-.1-.232-.225-.67-.225a.87.87 0 0 0-.681.279l-.012.011c-.154.155-.274.38-.274.807v.115c0 .285.057.499.144.669a1.1 1.1 0 0 0 .367.405c.137.082.28.123.455.123.423 0 .59-.118.686-.23zm8.266-3.013q.345-.13.724-.14l.069-.002q.493 0 .642.099l.247-1.794q-.196-.099-.717-.099a2.3 2.3 0 0 0-.545.063 2 2 0 0 0-.411.148 2.2 2.2 0 0 0-.4.249 2.5 2.5 0 0 0-.485.499 2.7 2.7 0 0 0-.32.581l-.05.137v-1.48h-1.778v7.553h1.777v-3.884q0-.546.159-.943a1.5 1.5 0 0 1 .466-.636 2.5 2.5 0 0 1 .399-.253 2 2 0 0 1 .224-.099zm9.784 2.656.05-.922q0-1.743-.856-2.698-.838-.97-2.584-.97-1.119-.001-2.007.493a3.46 3.46 0 0 0-1.4 1.382q-.493.906-.493 2.106 0 1.07.428 1.975.428.89 1.332 1.432.906.526 2.255.526.973 0 1.668-.185l.044-.012.135-.04q.613-.184.984-.421l-.542-1.267q-.3.162-.642.274l-.297.087q-.51.131-1.3.131-.954 0-1.497-.444a1.6 1.6 0 0 1-.192-.193q-.366-.44-.512-1.234l-.004-.021zm-5.427-1.256-.003.022h3.752v-.138q-.011-.727-.288-1.118a1 1 0 0 0-.156-.176q-.46-.428-1.316-.428-.986 0-1.494.604-.379.45-.494 1.234zm-27.053 2.77V4.7h-1.86v12.095h5.333V15.15zm7.103-5.908v7.553h-1.843V9.242h1.843z'/%3E%3Cpath fill='%23fff' d='m19.63 11.151-.757-1.71-.345 1.71-1.12 5.644h-1.827L18.083 4.7h.197l3.325 6.533.988 2.19.988-2.19L26.839 4.7h.181l2.6 12.095h-1.81l-1.218-5.644-.362-1.71-.658 1.71-2.93 5.644h-.098l-2.913-5.644zm14.836 5.81q-1.02 0-1.893-.478a3.8 3.8 0 0 1-1.381-1.382q-.51-.906-.51-2.106 0-1.185.444-2.074a3.36 3.36 0 0 1 1.3-1.382q.839-.494 1.974-.494a3.3 3.3 0 0 1 1.234.231 3.3 3.3 0 0 1 .97.575q.396.33.527.659l.033-1.267h1.694v7.553H37.18l-.033-1.332q-.279.593-1.02 1.053a3.17 3.17 0 0 1-1.662.444zm.296-1.482q.938 0 1.58-.642.642-.66.642-1.711v-.115q0-.708-.296-1.267a2.2 2.2 0 0 0-.807-.872 2.1 2.1 0 0 0-1.119-.313q-1.053 0-1.629.692-.575.675-.575 1.76 0 1.103.559 1.795.577.675 1.645.675zm6.521-6.237h1.711v1.4q.906-1.597 2.83-1.597 1.596 0 2.584 1.02.988 1.005.988 2.914 0 1.185-.493 2.09a3.46 3.46 0 0 1-1.316 1.399 3.5 3.5 0 0 1-1.844.493q-.954 0-1.662-.329a2.67 2.67 0 0 1-1.086-.97l.017 5.134h-1.728zm4.048 6.22q1.07 0 1.645-.674.577-.69.576-1.762 0-1.119-.576-1.777-.558-.675-1.645-.675-.592 0-1.12.296-.51.28-.822.823-.296.527-.296 1.234v.115q0 .708.296 1.267.313.543.823.855.51.296 1.119.297z'/%3E%3Cpath fill='%23e1e3e9' d='M51.325 4.7h1.86v10.45h3.473v1.646h-5.333zm7.12 4.542h1.843v7.553h-1.843zm.905-1.415a1.16 1.16 0 0 1-.856-.346 1.17 1.17 0 0 1-.346-.856 1.05 1.05 0 0 1 .346-.79q.346-.329.856-.329.494 0 .839.33a1.05 1.05 0 0 1 .345.79 1.16 1.16 0 0 1-.345.855q-.33.346-.84.346zm7.875 9.133a3.17 3.17 0 0 1-1.662-.444q-.723-.46-1.004-1.053l-.033 1.332h-1.71V4.701h1.743v4.657l-.082 1.283q.279-.658 1.086-1.119a3.5 3.5 0 0 1 1.778-.477q1.119 0 1.942.51a3.24 3.24 0 0 1 1.283 1.4q.445.888.444 2.072 0 1.201-.526 2.09a3.5 3.5 0 0 1-1.382 1.366 3.8 3.8 0 0 1-1.876.477zm-.296-1.481q1.069 0 1.645-.675.577-.69.577-1.778 0-1.102-.577-1.776-.56-.691-1.645-.692a2.12 2.12 0 0 0-1.58.659q-.642.641-.642 1.694v.115q0 .71.296 1.267a2.4 2.4 0 0 0 .807.872 2.1 2.1 0 0 0 1.119.313zm5.927-6.237h1.777v1.481q.263-.757.856-1.217a2.14 2.14 0 0 1 1.349-.46q.527 0 .724.098l-.247 1.794q-.149-.099-.642-.099-.774 0-1.416.494-.626.493-.626 1.58v3.883h-1.777V9.242zm9.534 7.718q-1.35 0-2.255-.526-.904-.543-1.332-1.432a4.6 4.6 0 0 1-.428-1.975q0-1.2.493-2.106a3.46 3.46 0 0 1 1.4-1.382q.889-.495 2.007-.494 1.744 0 2.584.97.855.956.856 2.7 0 .444-.05.92h-5.43q.18 1.005.708 1.45.542.443 1.497.443.79 0 1.3-.131a4 4 0 0 0 .938-.362l.542 1.267q-.411.263-1.119.46-.708.198-1.711.197zm1.596-4.558q.016-1.02-.444-1.432-.46-.428-1.316-.428-1.728 0-1.991 1.86z'/%3E%3Cpath d='M5.074 15.948a.484.657 0 0 0-.486.659v1.84a.484.657 0 0 0 .486.659h4.101a.484.657 0 0 0 .486-.659v-1.84a.484.657 0 0 0-.486-.659zm3.56 1.16H5.617v.838h3.017z' style='fill:%23fff;fill-rule:evenodd;stroke-width:1.03600001'/%3E%3Cg style='stroke-width:1.12603545'%3E%3Cpath d='M-9.408-1.416c-3.833-.025-7.056 2.912-7.08 6.615-.02 3.08 1.653 4.832 3.107 6.268.903.892 1.721 1.74 2.32 2.902l-.525-.004c-.543-.003-.992.304-1.24.639a1.87 1.87 0 0 0-.362 1.121l-.011 1.877c-.003.402.104.787.347 1.125.244.338.688.653 1.23.656l4.142.028c.542.003.99-.306 1.238-.641a1.87 1.87 0 0 0 .363-1.121l.012-1.875a1.87 1.87 0 0 0-.348-1.127c-.243-.338-.688-.653-1.23-.656l-.518-.004c.597-1.145 1.425-1.983 2.348-2.87 1.473-1.414 3.18-3.149 3.2-6.226-.016-3.59-2.923-6.684-6.993-6.707m-.006 1.1v.002c3.274.02 5.92 2.532 5.9 5.6-.017 2.706-1.39 4.026-2.863 5.44-1.034.994-2.118 2.033-2.814 3.633-.018.041-.052.055-.075.065q-.013.004-.02.01a.34.34 0 0 1-.226.084.34.34 0 0 1-.224-.086l-.092-.077c-.699-1.615-1.768-2.669-2.781-3.67-1.454-1.435-2.797-2.762-2.78-5.478.02-3.067 2.7-5.545 5.975-5.523m-.02 2.826c-1.62-.01-2.944 1.315-2.955 2.96-.01 1.646 1.295 2.988 2.916 2.999h.002c1.621.01 2.943-1.316 2.953-2.961.011-1.646-1.294-2.988-2.916-2.998m-.005 1.1c1.017.006 1.829.83 1.822 1.89s-.83 1.874-1.848 1.867c-1.018-.006-1.829-.83-1.822-1.89s.83-1.874 1.848-1.868m-2.155 11.857 4.14.025c.271.002.49.305.487.676l-.013 1.875c-.003.37-.224.67-.495.668l-4.14-.025c-.27-.002-.487-.306-.485-.676l.012-1.875c.003-.37.224-.67.494-.668' style='color:%23000;font-style:normal;font-variant:normal;font-weight:400;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:%23000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:evenodd;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:%23000;solid-opacity:1;vector-effect:none;fill:%23000;fill-opacity:.4;fill-rule:evenodd;stroke:none;stroke-width:2.47727823;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto' transform='translate(15.553 2.85)scale(.88807)'/%3E%3Cpath d='M-9.415-.316C-12.69-.338-15.37 2.14-15.39 5.207c-.017 2.716 1.326 4.041 2.78 5.477 1.013 1 2.081 2.055 2.78 3.67l.092.076a.34.34 0 0 0 .225.086.34.34 0 0 0 .227-.083l.019-.01c.022-.009.057-.024.074-.064.697-1.6 1.78-2.64 2.814-3.634 1.473-1.414 2.847-2.733 2.864-5.44.02-3.067-2.627-5.58-5.901-5.601m-.057 8.784c1.621.011 2.944-1.315 2.955-2.96.01-1.646-1.295-2.988-2.916-2.999-1.622-.01-2.945 1.315-2.955 2.96s1.295 2.989 2.916 3' style='clip-rule:evenodd;fill:%23e1e3e9;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2.47727823;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:.4' transform='translate(15.553 2.85)scale(.88807)'/%3E%3Cpath d='M-11.594 15.465c-.27-.002-.492.297-.494.668l-.012 1.876c-.003.371.214.673.485.675l4.14.027c.271.002.492-.298.495-.668l.012-1.877c.003-.37-.215-.672-.485-.674z' style='clip-rule:evenodd;fill:%23fff;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2.47727823;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:.4' transform='translate(15.553 2.85)scale(.88807)'/%3E%3C/g%3E%3C/svg%3E");background-repeat:no-repeat;cursor:pointer;display:block;height:23px;margin:0 0 -4px -4px;overflow:hidden;width:88px}a.maplibregl-ctrl-logo.maplibregl-compact{width:14px}@media (forced-colors:active){a.maplibregl-ctrl-logo{background-color:transparent;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='23' fill='none'%3E%3Cpath fill='%23000' fill-opacity='.4' fill-rule='evenodd' d='M17.408 16.796h-1.827l2.501-12.095h.198l3.324 6.533.988 2.19.988-2.19 3.258-6.533h.181l2.6 12.095h-1.81l-1.218-5.644-.362-1.71-.658 1.71-2.929 5.644h-.098l-2.914-5.644-.757-1.71-.345 1.71zm1.958-3.42-.726 3.663a1.255 1.255 0 0 1-1.232 1.011h-1.827a1.255 1.255 0 0 1-1.229-1.509l2.501-12.095a1.255 1.255 0 0 1 1.23-1.001h.197a1.25 1.25 0 0 1 1.12.685l3.19 6.273 3.125-6.263a1.25 1.25 0 0 1 1.123-.695h.181a1.255 1.255 0 0 1 1.227.991l1.443 6.71a5 5 0 0 1 .314-.787l.009-.016a4.6 4.6 0 0 1 1.777-1.887c.782-.46 1.668-.667 2.611-.667a4.6 4.6 0 0 1 1.7.32l.306.134c.21-.16.474-.256.759-.256h1.694a1.255 1.255 0 0 1 1.212.925 1.255 1.255 0 0 1 1.212-.925h1.711c.284 0 .545.094.755.252.613-.3 1.312-.45 2.075-.45 1.356 0 2.557.445 3.482 1.4q.47.48.763 1.064V4.701a1.255 1.255 0 0 1 1.255-1.255h1.86A1.255 1.255 0 0 1 54.44 4.7v9.194h2.217c.19 0 .37.043.532.118v-4.77c0-.356.147-.678.385-.906a2.42 2.42 0 0 1-.682-1.71c0-.665.267-1.253.735-1.7a2.45 2.45 0 0 1 1.722-.674 2.43 2.43 0 0 1 1.705.675q.318.302.504.683V4.7a1.255 1.255 0 0 1 1.255-1.255h1.744A1.255 1.255 0 0 1 65.812 4.7v3.335a4.8 4.8 0 0 1 1.526-.246c.938 0 1.817.214 2.59.69a4.47 4.47 0 0 1 1.67 1.743v-.98a1.255 1.255 0 0 1 1.256-1.256h1.777c.233 0 .451.064.639.174a3.4 3.4 0 0 1 1.567-.372c.346 0 .861.02 1.285.232a1.25 1.25 0 0 1 .689 1.004 4.7 4.7 0 0 1 .853-.588c.795-.44 1.675-.647 2.61-.647 1.385 0 2.65.39 3.525 1.396.836.938 1.168 2.173 1.168 3.528q-.001.515-.056 1.051a1.255 1.255 0 0 1-.947 1.09l.408.952a1.255 1.255 0 0 1-.477 1.552c-.418.268-.92.463-1.458.612-.613.171-1.304.244-2.049.244-1.06 0-2.043-.207-2.886-.698l-.015-.008c-.798-.48-1.419-1.135-1.818-1.963l-.004-.008a5.8 5.8 0 0 1-.548-2.512q0-.429.053-.843a1.3 1.3 0 0 1-.333-.086l-.166-.004c-.223 0-.426.062-.643.228-.03.024-.142.139-.142.59v3.883a1.255 1.255 0 0 1-1.256 1.256h-1.777a1.255 1.255 0 0 1-1.256-1.256V15.69l-.032.057a4.8 4.8 0 0 1-1.86 1.833 5.04 5.04 0 0 1-2.484.634 4.5 4.5 0 0 1-1.935-.424 1.25 1.25 0 0 1-.764.258h-1.71a1.255 1.255 0 0 1-1.256-1.255V7.687a2.4 2.4 0 0 1-.428.625c.253.23.412.561.412.93v7.553a1.255 1.255 0 0 1-1.256 1.255h-1.843a1.25 1.25 0 0 1-.894-.373c-.228.23-.544.373-.894.373H51.32a1.255 1.255 0 0 1-1.256-1.255v-1.251l-.061.117a4.7 4.7 0 0 1-1.782 1.884 4.77 4.77 0 0 1-2.485.67 5.6 5.6 0 0 1-1.485-.188l.009 2.764a1.255 1.255 0 0 1-1.255 1.259h-1.729a1.255 1.255 0 0 1-1.255-1.255v-3.537a1.255 1.255 0 0 1-1.167.793h-1.679a1.25 1.25 0 0 1-.77-.263 4.5 4.5 0 0 1-1.945.429c-.885 0-1.724-.21-2.495-.632l-.017-.01a5 5 0 0 1-1.081-.836 1.255 1.255 0 0 1-1.254 1.312h-1.81a1.255 1.255 0 0 1-1.228-.99l-.782-3.625-2.044 3.939a1.25 1.25 0 0 1-1.115.676h-.098a1.25 1.25 0 0 1-1.116-.68l-2.061-3.994zM35.92 16.63l.207-.114.223-.15q.493-.356.735-.785l.061-.118.033 1.332h1.678V9.242h-1.694l-.033 1.267q-.133-.329-.526-.658l-.032-.028a3.2 3.2 0 0 0-.668-.428l-.27-.12a3.3 3.3 0 0 0-1.235-.23q-1.136-.001-1.974.493a3.36 3.36 0 0 0-1.3 1.382q-.445.89-.444 2.074 0 1.2.51 2.107a3.8 3.8 0 0 0 1.382 1.381 3.9 3.9 0 0 0 1.893.477q.795 0 1.455-.33zm-2.789-5.38q-.576.675-.575 1.762 0 1.102.559 1.794.576.675 1.645.675a2.25 2.25 0 0 0 .934-.19 2.2 2.2 0 0 0 .468-.29l.178-.161a2.2 2.2 0 0 0 .397-.561q.244-.5.244-1.15v-.115q0-.708-.296-1.267l-.043-.077a2.2 2.2 0 0 0-.633-.709l-.13-.086-.047-.028a2.1 2.1 0 0 0-1.073-.285q-1.052 0-1.629.692zm2.316 2.706c.163-.17.28-.407.28-.83v-.114c0-.292-.06-.508-.15-.68a.96.96 0 0 0-.353-.389.85.85 0 0 0-.464-.127c-.4 0-.56.114-.664.239l-.01.012c-.148.174-.275.45-.275.945 0 .506.122.801.27.99.097.11.266.224.68.224.303 0 .504-.09.687-.269zm7.545 1.705a2.6 2.6 0 0 0 .331.423q.319.33.755.548l.173.074q.65.255 1.49.255 1.02 0 1.844-.493a3.45 3.45 0 0 0 1.316-1.4q.493-.904.493-2.089 0-1.909-.988-2.913-.988-1.02-2.584-1.02-.898 0-1.575.347a3 3 0 0 0-.415.262l-.199.166a3.4 3.4 0 0 0-.64.82V9.242h-1.712v11.553h1.729l-.017-5.134zm.53-1.138q.206.29.48.5l.155.11.053.034q.51.296 1.119.297 1.07 0 1.645-.675.577-.69.576-1.762 0-1.119-.576-1.777-.558-.675-1.645-.675-.435 0-.835.16a2 2 0 0 0-.284.136 2 2 0 0 0-.363.254 2.2 2.2 0 0 0-.46.569l-.082.162a2.6 2.6 0 0 0-.213 1.072v.115q0 .707.296 1.267l.135.211zm.964-.818a1.1 1.1 0 0 0 .367.385.94.94 0 0 0 .476.118c.423 0 .59-.117.687-.23.159-.194.28-.478.28-.95 0-.53-.133-.8-.266-.952l-.021-.025c-.078-.094-.231-.221-.68-.221a1 1 0 0 0-.503.135l-.012.007a.86.86 0 0 0-.335.343c-.073.133-.132.324-.132.614v.115a1.4 1.4 0 0 0 .14.66zm15.7-6.222q.347-.346.346-.856a1.05 1.05 0 0 0-.345-.79 1.18 1.18 0 0 0-.84-.329q-.51 0-.855.33a1.05 1.05 0 0 0-.346.79q0 .51.346.855.345.346.856.346.51 0 .839-.346zm4.337 9.314.033-1.332q.191.403.59.747l.098.081a4 4 0 0 0 .316.224l.223.122a3.2 3.2 0 0 0 1.44.322 3.8 3.8 0 0 0 1.875-.477 3.5 3.5 0 0 0 1.382-1.366q.527-.89.526-2.09 0-1.184-.444-2.073a3.24 3.24 0 0 0-1.283-1.399q-.823-.51-1.942-.51a3.5 3.5 0 0 0-1.527.344l-.086.043-.165.09a3 3 0 0 0-.33.214q-.432.315-.656.707a2 2 0 0 0-.099.198l.082-1.283V4.701h-1.744v12.095zm.473-2.509a2.5 2.5 0 0 0 .566.7q.117.098.245.18l.144.08a2.1 2.1 0 0 0 .975.232q1.07 0 1.645-.675.576-.69.576-1.778 0-1.102-.576-1.777-.56-.691-1.645-.692a2.2 2.2 0 0 0-1.015.235q-.22.113-.415.282l-.15.142a2.1 2.1 0 0 0-.42.594q-.223.479-.223 1.1v.115q0 .705.293 1.26zm2.616-.293c.157-.191.28-.479.28-.967 0-.51-.13-.79-.276-.961l-.021-.026c-.082-.1-.232-.225-.67-.225a.87.87 0 0 0-.681.279l-.012.011c-.154.155-.274.38-.274.807v.115c0 .285.057.499.144.669a1.1 1.1 0 0 0 .367.405c.137.082.28.123.455.123.423 0 .59-.118.686-.23zm8.266-3.013q.345-.13.724-.14l.069-.002q.493 0 .642.099l.247-1.794q-.196-.099-.717-.099a2.3 2.3 0 0 0-.545.063 2 2 0 0 0-.411.148 2.2 2.2 0 0 0-.4.249 2.5 2.5 0 0 0-.485.499 2.7 2.7 0 0 0-.32.581l-.05.137v-1.48h-1.778v7.553h1.777v-3.884q0-.546.159-.943a1.5 1.5 0 0 1 .466-.636 2.5 2.5 0 0 1 .399-.253 2 2 0 0 1 .224-.099zm9.784 2.656.05-.922q0-1.743-.856-2.698-.838-.97-2.584-.97-1.119-.001-2.007.493a3.46 3.46 0 0 0-1.4 1.382q-.493.906-.493 2.106 0 1.07.428 1.975.428.89 1.332 1.432.906.526 2.255.526.973 0 1.668-.185l.044-.012.135-.04q.613-.184.984-.421l-.542-1.267q-.3.162-.642.274l-.297.087q-.51.131-1.3.131-.954 0-1.497-.444a1.6 1.6 0 0 1-.192-.193q-.366-.44-.512-1.234l-.004-.021zm-5.427-1.256-.003.022h3.752v-.138q-.011-.727-.288-1.118a1 1 0 0 0-.156-.176q-.46-.428-1.316-.428-.986 0-1.494.604-.379.45-.494 1.234zm-27.053 2.77V4.7h-1.86v12.095h5.333V15.15zm7.103-5.908v7.553h-1.843V9.242h1.843z'/%3E%3Cpath fill='%23fff' d='m19.63 11.151-.757-1.71-.345 1.71-1.12 5.644h-1.827L18.083 4.7h.197l3.325 6.533.988 2.19.988-2.19L26.839 4.7h.181l2.6 12.095h-1.81l-1.218-5.644-.362-1.71-.658 1.71-2.93 5.644h-.098l-2.913-5.644zm14.836 5.81q-1.02 0-1.893-.478a3.8 3.8 0 0 1-1.381-1.382q-.51-.906-.51-2.106 0-1.185.444-2.074a3.36 3.36 0 0 1 1.3-1.382q.839-.494 1.974-.494a3.3 3.3 0 0 1 1.234.231 3.3 3.3 0 0 1 .97.575q.396.33.527.659l.033-1.267h1.694v7.553H37.18l-.033-1.332q-.279.593-1.02 1.053a3.17 3.17 0 0 1-1.662.444zm.296-1.482q.938 0 1.58-.642.642-.66.642-1.711v-.115q0-.708-.296-1.267a2.2 2.2 0 0 0-.807-.872 2.1 2.1 0 0 0-1.119-.313q-1.053 0-1.629.692-.575.675-.575 1.76 0 1.103.559 1.795.577.675 1.645.675zm6.521-6.237h1.711v1.4q.906-1.597 2.83-1.597 1.596 0 2.584 1.02.988 1.005.988 2.914 0 1.185-.493 2.09a3.46 3.46 0 0 1-1.316 1.399 3.5 3.5 0 0 1-1.844.493q-.954 0-1.662-.329a2.67 2.67 0 0 1-1.086-.97l.017 5.134h-1.728zm4.048 6.22q1.07 0 1.645-.674.577-.69.576-1.762 0-1.119-.576-1.777-.558-.675-1.645-.675-.592 0-1.12.296-.51.28-.822.823-.296.527-.296 1.234v.115q0 .708.296 1.267.313.543.823.855.51.296 1.119.297z'/%3E%3Cpath fill='%23e1e3e9' d='M51.325 4.7h1.86v10.45h3.473v1.646h-5.333zm7.12 4.542h1.843v7.553h-1.843zm.905-1.415a1.16 1.16 0 0 1-.856-.346 1.17 1.17 0 0 1-.346-.856 1.05 1.05 0 0 1 .346-.79q.346-.329.856-.329.494 0 .839.33a1.05 1.05 0 0 1 .345.79 1.16 1.16 0 0 1-.345.855q-.33.346-.84.346zm7.875 9.133a3.17 3.17 0 0 1-1.662-.444q-.723-.46-1.004-1.053l-.033 1.332h-1.71V4.701h1.743v4.657l-.082 1.283q.279-.658 1.086-1.119a3.5 3.5 0 0 1 1.778-.477q1.119 0 1.942.51a3.24 3.24 0 0 1 1.283 1.4q.445.888.444 2.072 0 1.201-.526 2.09a3.5 3.5 0 0 1-1.382 1.366 3.8 3.8 0 0 1-1.876.477zm-.296-1.481q1.069 0 1.645-.675.577-.69.577-1.778 0-1.102-.577-1.776-.56-.691-1.645-.692a2.12 2.12 0 0 0-1.58.659q-.642.641-.642 1.694v.115q0 .71.296 1.267a2.4 2.4 0 0 0 .807.872 2.1 2.1 0 0 0 1.119.313zm5.927-6.237h1.777v1.481q.263-.757.856-1.217a2.14 2.14 0 0 1 1.349-.46q.527 0 .724.098l-.247 1.794q-.149-.099-.642-.099-.774 0-1.416.494-.626.493-.626 1.58v3.883h-1.777V9.242zm9.534 7.718q-1.35 0-2.255-.526-.904-.543-1.332-1.432a4.6 4.6 0 0 1-.428-1.975q0-1.2.493-2.106a3.46 3.46 0 0 1 1.4-1.382q.889-.495 2.007-.494 1.744 0 2.584.97.855.956.856 2.7 0 .444-.05.92h-5.43q.18 1.005.708 1.45.542.443 1.497.443.79 0 1.3-.131a4 4 0 0 0 .938-.362l.542 1.267q-.411.263-1.119.46-.708.198-1.711.197zm1.596-4.558q.016-1.02-.444-1.432-.46-.428-1.316-.428-1.728 0-1.991 1.86z'/%3E%3Cpath d='M5.074 15.948a.484.657 0 0 0-.486.659v1.84a.484.657 0 0 0 .486.659h4.101a.484.657 0 0 0 .486-.659v-1.84a.484.657 0 0 0-.486-.659zm3.56 1.16H5.617v.838h3.017z' style='fill:%23fff;fill-rule:evenodd;stroke-width:1.03600001'/%3E%3Cg style='stroke-width:1.12603545'%3E%3Cpath d='M-9.408-1.416c-3.833-.025-7.056 2.912-7.08 6.615-.02 3.08 1.653 4.832 3.107 6.268.903.892 1.721 1.74 2.32 2.902l-.525-.004c-.543-.003-.992.304-1.24.639a1.87 1.87 0 0 0-.362 1.121l-.011 1.877c-.003.402.104.787.347 1.125.244.338.688.653 1.23.656l4.142.028c.542.003.99-.306 1.238-.641a1.87 1.87 0 0 0 .363-1.121l.012-1.875a1.87 1.87 0 0 0-.348-1.127c-.243-.338-.688-.653-1.23-.656l-.518-.004c.597-1.145 1.425-1.983 2.348-2.87 1.473-1.414 3.18-3.149 3.2-6.226-.016-3.59-2.923-6.684-6.993-6.707m-.006 1.1v.002c3.274.02 5.92 2.532 5.9 5.6-.017 2.706-1.39 4.026-2.863 5.44-1.034.994-2.118 2.033-2.814 3.633-.018.041-.052.055-.075.065q-.013.004-.02.01a.34.34 0 0 1-.226.084.34.34 0 0 1-.224-.086l-.092-.077c-.699-1.615-1.768-2.669-2.781-3.67-1.454-1.435-2.797-2.762-2.78-5.478.02-3.067 2.7-5.545 5.975-5.523m-.02 2.826c-1.62-.01-2.944 1.315-2.955 2.96-.01 1.646 1.295 2.988 2.916 2.999h.002c1.621.01 2.943-1.316 2.953-2.961.011-1.646-1.294-2.988-2.916-2.998m-.005 1.1c1.017.006 1.829.83 1.822 1.89s-.83 1.874-1.848 1.867c-1.018-.006-1.829-.83-1.822-1.89s.83-1.874 1.848-1.868m-2.155 11.857 4.14.025c.271.002.49.305.487.676l-.013 1.875c-.003.37-.224.67-.495.668l-4.14-.025c-.27-.002-.487-.306-.485-.676l.012-1.875c.003-.37.224-.67.494-.668' style='color:%23000;font-style:normal;font-variant:normal;font-weight:400;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:%23000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:evenodd;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:%23000;solid-opacity:1;vector-effect:none;fill:%23000;fill-opacity:.4;fill-rule:evenodd;stroke:none;stroke-width:2.47727823;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto' transform='translate(15.553 2.85)scale(.88807)'/%3E%3Cpath d='M-9.415-.316C-12.69-.338-15.37 2.14-15.39 5.207c-.017 2.716 1.326 4.041 2.78 5.477 1.013 1 2.081 2.055 2.78 3.67l.092.076a.34.34 0 0 0 .225.086.34.34 0 0 0 .227-.083l.019-.01c.022-.009.057-.024.074-.064.697-1.6 1.78-2.64 2.814-3.634 1.473-1.414 2.847-2.733 2.864-5.44.02-3.067-2.627-5.58-5.901-5.601m-.057 8.784c1.621.011 2.944-1.315 2.955-2.96.01-1.646-1.295-2.988-2.916-2.999-1.622-.01-2.945 1.315-2.955 2.96s1.295 2.989 2.916 3' style='clip-rule:evenodd;fill:%23e1e3e9;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2.47727823;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:.4' transform='translate(15.553 2.85)scale(.88807)'/%3E%3Cpath d='M-11.594 15.465c-.27-.002-.492.297-.494.668l-.012 1.876c-.003.371.214.673.485.675l4.14.027c.271.002.492-.298.495-.668l.012-1.877c.003-.37-.215-.672-.485-.674z' style='clip-rule:evenodd;fill:%23fff;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2.47727823;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:.4' transform='translate(15.553 2.85)scale(.88807)'/%3E%3C/g%3E%3C/svg%3E")}}@media (forced-colors:active) and (prefers-color-scheme:light){a.maplibregl-ctrl-logo{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='23' fill='none'%3E%3Cpath fill='%23000' fill-opacity='.4' fill-rule='evenodd' d='M17.408 16.796h-1.827l2.501-12.095h.198l3.324 6.533.988 2.19.988-2.19 3.258-6.533h.181l2.6 12.095h-1.81l-1.218-5.644-.362-1.71-.658 1.71-2.929 5.644h-.098l-2.914-5.644-.757-1.71-.345 1.71zm1.958-3.42-.726 3.663a1.255 1.255 0 0 1-1.232 1.011h-1.827a1.255 1.255 0 0 1-1.229-1.509l2.501-12.095a1.255 1.255 0 0 1 1.23-1.001h.197a1.25 1.25 0 0 1 1.12.685l3.19 6.273 3.125-6.263a1.25 1.25 0 0 1 1.123-.695h.181a1.255 1.255 0 0 1 1.227.991l1.443 6.71a5 5 0 0 1 .314-.787l.009-.016a4.6 4.6 0 0 1 1.777-1.887c.782-.46 1.668-.667 2.611-.667a4.6 4.6 0 0 1 1.7.32l.306.134c.21-.16.474-.256.759-.256h1.694a1.255 1.255 0 0 1 1.212.925 1.255 1.255 0 0 1 1.212-.925h1.711c.284 0 .545.094.755.252.613-.3 1.312-.45 2.075-.45 1.356 0 2.557.445 3.482 1.4q.47.48.763 1.064V4.701a1.255 1.255 0 0 1 1.255-1.255h1.86A1.255 1.255 0 0 1 54.44 4.7v9.194h2.217c.19 0 .37.043.532.118v-4.77c0-.356.147-.678.385-.906a2.42 2.42 0 0 1-.682-1.71c0-.665.267-1.253.735-1.7a2.45 2.45 0 0 1 1.722-.674 2.43 2.43 0 0 1 1.705.675q.318.302.504.683V4.7a1.255 1.255 0 0 1 1.255-1.255h1.744A1.255 1.255 0 0 1 65.812 4.7v3.335a4.8 4.8 0 0 1 1.526-.246c.938 0 1.817.214 2.59.69a4.47 4.47 0 0 1 1.67 1.743v-.98a1.255 1.255 0 0 1 1.256-1.256h1.777c.233 0 .451.064.639.174a3.4 3.4 0 0 1 1.567-.372c.346 0 .861.02 1.285.232a1.25 1.25 0 0 1 .689 1.004 4.7 4.7 0 0 1 .853-.588c.795-.44 1.675-.647 2.61-.647 1.385 0 2.65.39 3.525 1.396.836.938 1.168 2.173 1.168 3.528q-.001.515-.056 1.051a1.255 1.255 0 0 1-.947 1.09l.408.952a1.255 1.255 0 0 1-.477 1.552c-.418.268-.92.463-1.458.612-.613.171-1.304.244-2.049.244-1.06 0-2.043-.207-2.886-.698l-.015-.008c-.798-.48-1.419-1.135-1.818-1.963l-.004-.008a5.8 5.8 0 0 1-.548-2.512q0-.429.053-.843a1.3 1.3 0 0 1-.333-.086l-.166-.004c-.223 0-.426.062-.643.228-.03.024-.142.139-.142.59v3.883a1.255 1.255 0 0 1-1.256 1.256h-1.777a1.255 1.255 0 0 1-1.256-1.256V15.69l-.032.057a4.8 4.8 0 0 1-1.86 1.833 5.04 5.04 0 0 1-2.484.634 4.5 4.5 0 0 1-1.935-.424 1.25 1.25 0 0 1-.764.258h-1.71a1.255 1.255 0 0 1-1.256-1.255V7.687a2.4 2.4 0 0 1-.428.625c.253.23.412.561.412.93v7.553a1.255 1.255 0 0 1-1.256 1.255h-1.843a1.25 1.25 0 0 1-.894-.373c-.228.23-.544.373-.894.373H51.32a1.255 1.255 0 0 1-1.256-1.255v-1.251l-.061.117a4.7 4.7 0 0 1-1.782 1.884 4.77 4.77 0 0 1-2.485.67 5.6 5.6 0 0 1-1.485-.188l.009 2.764a1.255 1.255 0 0 1-1.255 1.259h-1.729a1.255 1.255 0 0 1-1.255-1.255v-3.537a1.255 1.255 0 0 1-1.167.793h-1.679a1.25 1.25 0 0 1-.77-.263 4.5 4.5 0 0 1-1.945.429c-.885 0-1.724-.21-2.495-.632l-.017-.01a5 5 0 0 1-1.081-.836 1.255 1.255 0 0 1-1.254 1.312h-1.81a1.255 1.255 0 0 1-1.228-.99l-.782-3.625-2.044 3.939a1.25 1.25 0 0 1-1.115.676h-.098a1.25 1.25 0 0 1-1.116-.68l-2.061-3.994zM35.92 16.63l.207-.114.223-.15q.493-.356.735-.785l.061-.118.033 1.332h1.678V9.242h-1.694l-.033 1.267q-.133-.329-.526-.658l-.032-.028a3.2 3.2 0 0 0-.668-.428l-.27-.12a3.3 3.3 0 0 0-1.235-.23q-1.136-.001-1.974.493a3.36 3.36 0 0 0-1.3 1.382q-.445.89-.444 2.074 0 1.2.51 2.107a3.8 3.8 0 0 0 1.382 1.381 3.9 3.9 0 0 0 1.893.477q.795 0 1.455-.33zm-2.789-5.38q-.576.675-.575 1.762 0 1.102.559 1.794.576.675 1.645.675a2.25 2.25 0 0 0 .934-.19 2.2 2.2 0 0 0 .468-.29l.178-.161a2.2 2.2 0 0 0 .397-.561q.244-.5.244-1.15v-.115q0-.708-.296-1.267l-.043-.077a2.2 2.2 0 0 0-.633-.709l-.13-.086-.047-.028a2.1 2.1 0 0 0-1.073-.285q-1.052 0-1.629.692zm2.316 2.706c.163-.17.28-.407.28-.83v-.114c0-.292-.06-.508-.15-.68a.96.96 0 0 0-.353-.389.85.85 0 0 0-.464-.127c-.4 0-.56.114-.664.239l-.01.012c-.148.174-.275.45-.275.945 0 .506.122.801.27.99.097.11.266.224.68.224.303 0 .504-.09.687-.269zm7.545 1.705a2.6 2.6 0 0 0 .331.423q.319.33.755.548l.173.074q.65.255 1.49.255 1.02 0 1.844-.493a3.45 3.45 0 0 0 1.316-1.4q.493-.904.493-2.089 0-1.909-.988-2.913-.988-1.02-2.584-1.02-.898 0-1.575.347a3 3 0 0 0-.415.262l-.199.166a3.4 3.4 0 0 0-.64.82V9.242h-1.712v11.553h1.729l-.017-5.134zm.53-1.138q.206.29.48.5l.155.11.053.034q.51.296 1.119.297 1.07 0 1.645-.675.577-.69.576-1.762 0-1.119-.576-1.777-.558-.675-1.645-.675-.435 0-.835.16a2 2 0 0 0-.284.136 2 2 0 0 0-.363.254 2.2 2.2 0 0 0-.46.569l-.082.162a2.6 2.6 0 0 0-.213 1.072v.115q0 .707.296 1.267l.135.211zm.964-.818a1.1 1.1 0 0 0 .367.385.94.94 0 0 0 .476.118c.423 0 .59-.117.687-.23.159-.194.28-.478.28-.95 0-.53-.133-.8-.266-.952l-.021-.025c-.078-.094-.231-.221-.68-.221a1 1 0 0 0-.503.135l-.012.007a.86.86 0 0 0-.335.343c-.073.133-.132.324-.132.614v.115a1.4 1.4 0 0 0 .14.66zm15.7-6.222q.347-.346.346-.856a1.05 1.05 0 0 0-.345-.79 1.18 1.18 0 0 0-.84-.329q-.51 0-.855.33a1.05 1.05 0 0 0-.346.79q0 .51.346.855.345.346.856.346.51 0 .839-.346zm4.337 9.314.033-1.332q.191.403.59.747l.098.081a4 4 0 0 0 .316.224l.223.122a3.2 3.2 0 0 0 1.44.322 3.8 3.8 0 0 0 1.875-.477 3.5 3.5 0 0 0 1.382-1.366q.527-.89.526-2.09 0-1.184-.444-2.073a3.24 3.24 0 0 0-1.283-1.399q-.823-.51-1.942-.51a3.5 3.5 0 0 0-1.527.344l-.086.043-.165.09a3 3 0 0 0-.33.214q-.432.315-.656.707a2 2 0 0 0-.099.198l.082-1.283V4.701h-1.744v12.095zm.473-2.509a2.5 2.5 0 0 0 .566.7q.117.098.245.18l.144.08a2.1 2.1 0 0 0 .975.232q1.07 0 1.645-.675.576-.69.576-1.778 0-1.102-.576-1.777-.56-.691-1.645-.692a2.2 2.2 0 0 0-1.015.235q-.22.113-.415.282l-.15.142a2.1 2.1 0 0 0-.42.594q-.223.479-.223 1.1v.115q0 .705.293 1.26zm2.616-.293c.157-.191.28-.479.28-.967 0-.51-.13-.79-.276-.961l-.021-.026c-.082-.1-.232-.225-.67-.225a.87.87 0 0 0-.681.279l-.012.011c-.154.155-.274.38-.274.807v.115c0 .285.057.499.144.669a1.1 1.1 0 0 0 .367.405c.137.082.28.123.455.123.423 0 .59-.118.686-.23zm8.266-3.013q.345-.13.724-.14l.069-.002q.493 0 .642.099l.247-1.794q-.196-.099-.717-.099a2.3 2.3 0 0 0-.545.063 2 2 0 0 0-.411.148 2.2 2.2 0 0 0-.4.249 2.5 2.5 0 0 0-.485.499 2.7 2.7 0 0 0-.32.581l-.05.137v-1.48h-1.778v7.553h1.777v-3.884q0-.546.159-.943a1.5 1.5 0 0 1 .466-.636 2.5 2.5 0 0 1 .399-.253 2 2 0 0 1 .224-.099zm9.784 2.656.05-.922q0-1.743-.856-2.698-.838-.97-2.584-.97-1.119-.001-2.007.493a3.46 3.46 0 0 0-1.4 1.382q-.493.906-.493 2.106 0 1.07.428 1.975.428.89 1.332 1.432.906.526 2.255.526.973 0 1.668-.185l.044-.012.135-.04q.613-.184.984-.421l-.542-1.267q-.3.162-.642.274l-.297.087q-.51.131-1.3.131-.954 0-1.497-.444a1.6 1.6 0 0 1-.192-.193q-.366-.44-.512-1.234l-.004-.021zm-5.427-1.256-.003.022h3.752v-.138q-.011-.727-.288-1.118a1 1 0 0 0-.156-.176q-.46-.428-1.316-.428-.986 0-1.494.604-.379.45-.494 1.234zm-27.053 2.77V4.7h-1.86v12.095h5.333V15.15zm7.103-5.908v7.553h-1.843V9.242h1.843z'/%3E%3Cpath fill='%23fff' d='m19.63 11.151-.757-1.71-.345 1.71-1.12 5.644h-1.827L18.083 4.7h.197l3.325 6.533.988 2.19.988-2.19L26.839 4.7h.181l2.6 12.095h-1.81l-1.218-5.644-.362-1.71-.658 1.71-2.93 5.644h-.098l-2.913-5.644zm14.836 5.81q-1.02 0-1.893-.478a3.8 3.8 0 0 1-1.381-1.382q-.51-.906-.51-2.106 0-1.185.444-2.074a3.36 3.36 0 0 1 1.3-1.382q.839-.494 1.974-.494a3.3 3.3 0 0 1 1.234.231 3.3 3.3 0 0 1 .97.575q.396.33.527.659l.033-1.267h1.694v7.553H37.18l-.033-1.332q-.279.593-1.02 1.053a3.17 3.17 0 0 1-1.662.444zm.296-1.482q.938 0 1.58-.642.642-.66.642-1.711v-.115q0-.708-.296-1.267a2.2 2.2 0 0 0-.807-.872 2.1 2.1 0 0 0-1.119-.313q-1.053 0-1.629.692-.575.675-.575 1.76 0 1.103.559 1.795.577.675 1.645.675zm6.521-6.237h1.711v1.4q.906-1.597 2.83-1.597 1.596 0 2.584 1.02.988 1.005.988 2.914 0 1.185-.493 2.09a3.46 3.46 0 0 1-1.316 1.399 3.5 3.5 0 0 1-1.844.493q-.954 0-1.662-.329a2.67 2.67 0 0 1-1.086-.97l.017 5.134h-1.728zm4.048 6.22q1.07 0 1.645-.674.577-.69.576-1.762 0-1.119-.576-1.777-.558-.675-1.645-.675-.592 0-1.12.296-.51.28-.822.823-.296.527-.296 1.234v.115q0 .708.296 1.267.313.543.823.855.51.296 1.119.297z'/%3E%3Cpath fill='%23e1e3e9' d='M51.325 4.7h1.86v10.45h3.473v1.646h-5.333zm7.12 4.542h1.843v7.553h-1.843zm.905-1.415a1.16 1.16 0 0 1-.856-.346 1.17 1.17 0 0 1-.346-.856 1.05 1.05 0 0 1 .346-.79q.346-.329.856-.329.494 0 .839.33a1.05 1.05 0 0 1 .345.79 1.16 1.16 0 0 1-.345.855q-.33.346-.84.346zm7.875 9.133a3.17 3.17 0 0 1-1.662-.444q-.723-.46-1.004-1.053l-.033 1.332h-1.71V4.701h1.743v4.657l-.082 1.283q.279-.658 1.086-1.119a3.5 3.5 0 0 1 1.778-.477q1.119 0 1.942.51a3.24 3.24 0 0 1 1.283 1.4q.445.888.444 2.072 0 1.201-.526 2.09a3.5 3.5 0 0 1-1.382 1.366 3.8 3.8 0 0 1-1.876.477zm-.296-1.481q1.069 0 1.645-.675.577-.69.577-1.778 0-1.102-.577-1.776-.56-.691-1.645-.692a2.12 2.12 0 0 0-1.58.659q-.642.641-.642 1.694v.115q0 .71.296 1.267a2.4 2.4 0 0 0 .807.872 2.1 2.1 0 0 0 1.119.313zm5.927-6.237h1.777v1.481q.263-.757.856-1.217a2.14 2.14 0 0 1 1.349-.46q.527 0 .724.098l-.247 1.794q-.149-.099-.642-.099-.774 0-1.416.494-.626.493-.626 1.58v3.883h-1.777V9.242zm9.534 7.718q-1.35 0-2.255-.526-.904-.543-1.332-1.432a4.6 4.6 0 0 1-.428-1.975q0-1.2.493-2.106a3.46 3.46 0 0 1 1.4-1.382q.889-.495 2.007-.494 1.744 0 2.584.97.855.956.856 2.7 0 .444-.05.92h-5.43q.18 1.005.708 1.45.542.443 1.497.443.79 0 1.3-.131a4 4 0 0 0 .938-.362l.542 1.267q-.411.263-1.119.46-.708.198-1.711.197zm1.596-4.558q.016-1.02-.444-1.432-.46-.428-1.316-.428-1.728 0-1.991 1.86z'/%3E%3Cpath d='M5.074 15.948a.484.657 0 0 0-.486.659v1.84a.484.657 0 0 0 .486.659h4.101a.484.657 0 0 0 .486-.659v-1.84a.484.657 0 0 0-.486-.659zm3.56 1.16H5.617v.838h3.017z' style='fill:%23fff;fill-rule:evenodd;stroke-width:1.03600001'/%3E%3Cg style='stroke-width:1.12603545'%3E%3Cpath d='M-9.408-1.416c-3.833-.025-7.056 2.912-7.08 6.615-.02 3.08 1.653 4.832 3.107 6.268.903.892 1.721 1.74 2.32 2.902l-.525-.004c-.543-.003-.992.304-1.24.639a1.87 1.87 0 0 0-.362 1.121l-.011 1.877c-.003.402.104.787.347 1.125.244.338.688.653 1.23.656l4.142.028c.542.003.99-.306 1.238-.641a1.87 1.87 0 0 0 .363-1.121l.012-1.875a1.87 1.87 0 0 0-.348-1.127c-.243-.338-.688-.653-1.23-.656l-.518-.004c.597-1.145 1.425-1.983 2.348-2.87 1.473-1.414 3.18-3.149 3.2-6.226-.016-3.59-2.923-6.684-6.993-6.707m-.006 1.1v.002c3.274.02 5.92 2.532 5.9 5.6-.017 2.706-1.39 4.026-2.863 5.44-1.034.994-2.118 2.033-2.814 3.633-.018.041-.052.055-.075.065q-.013.004-.02.01a.34.34 0 0 1-.226.084.34.34 0 0 1-.224-.086l-.092-.077c-.699-1.615-1.768-2.669-2.781-3.67-1.454-1.435-2.797-2.762-2.78-5.478.02-3.067 2.7-5.545 5.975-5.523m-.02 2.826c-1.62-.01-2.944 1.315-2.955 2.96-.01 1.646 1.295 2.988 2.916 2.999h.002c1.621.01 2.943-1.316 2.953-2.961.011-1.646-1.294-2.988-2.916-2.998m-.005 1.1c1.017.006 1.829.83 1.822 1.89s-.83 1.874-1.848 1.867c-1.018-.006-1.829-.83-1.822-1.89s.83-1.874 1.848-1.868m-2.155 11.857 4.14.025c.271.002.49.305.487.676l-.013 1.875c-.003.37-.224.67-.495.668l-4.14-.025c-.27-.002-.487-.306-.485-.676l.012-1.875c.003-.37.224-.67.494-.668' style='color:%23000;font-style:normal;font-variant:normal;font-weight:400;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:%23000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:evenodd;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:%23000;solid-opacity:1;vector-effect:none;fill:%23000;fill-opacity:.4;fill-rule:evenodd;stroke:none;stroke-width:2.47727823;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto' transform='translate(15.553 2.85)scale(.88807)'/%3E%3Cpath d='M-9.415-.316C-12.69-.338-15.37 2.14-15.39 5.207c-.017 2.716 1.326 4.041 2.78 5.477 1.013 1 2.081 2.055 2.78 3.67l.092.076a.34.34 0 0 0 .225.086.34.34 0 0 0 .227-.083l.019-.01c.022-.009.057-.024.074-.064.697-1.6 1.78-2.64 2.814-3.634 1.473-1.414 2.847-2.733 2.864-5.44.02-3.067-2.627-5.58-5.901-5.601m-.057 8.784c1.621.011 2.944-1.315 2.955-2.96.01-1.646-1.295-2.988-2.916-2.999-1.622-.01-2.945 1.315-2.955 2.96s1.295 2.989 2.916 3' style='clip-rule:evenodd;fill:%23e1e3e9;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2.47727823;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:.4' transform='translate(15.553 2.85)scale(.88807)'/%3E%3Cpath d='M-11.594 15.465c-.27-.002-.492.297-.494.668l-.012 1.876c-.003.371.214.673.485.675l4.14.027c.271.002.492-.298.495-.668l.012-1.877c.003-.37-.215-.672-.485-.674z' style='clip-rule:evenodd;fill:%23fff;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2.47727823;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:.4' transform='translate(15.553 2.85)scale(.88807)'/%3E%3C/g%3E%3C/svg%3E")}}.maplibregl-ctrl.maplibregl-ctrl-attrib{background-color:hsla(0,0%,100%,.5);margin:0;padding:0 5px}@media screen{.maplibregl-ctrl-attrib.maplibregl-compact{background-color:#fff;border-radius:12px;box-sizing:content-box;color:#000;margin:10px;min-height:20px;padding:2px 24px 2px 0;position:relative}.maplibregl-ctrl-attrib.maplibregl-compact-show{padding:2px 28px 2px 8px;visibility:visible}.maplibregl-ctrl-bottom-left>.maplibregl-ctrl-attrib.maplibregl-compact-show,.maplibregl-ctrl-top-left>.maplibregl-ctrl-attrib.maplibregl-compact-show{border-radius:12px;padding:2px 8px 2px 28px}.maplibregl-ctrl-attrib.maplibregl-compact .maplibregl-ctrl-attrib-inner{display:none}.maplibregl-ctrl-attrib-button{background-color:hsla(0,0%,100%,.5);background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill-rule='evenodd' viewBox='0 0 20 20'%3E%3Cpath d='M4 10a6 6 0 1 0 12 0 6 6 0 1 0-12 0m5-3a1 1 0 1 0 2 0 1 1 0 1 0-2 0m0 3a1 1 0 1 1 2 0v3a1 1 0 1 1-2 0'/%3E%3C/svg%3E");border:0;border-radius:12px;box-sizing:border-box;cursor:pointer;display:none;height:24px;outline:none;position:absolute;right:0;top:0;width:24px}.maplibregl-ctrl-attrib summary.maplibregl-ctrl-attrib-button{-webkit-appearance:none;-moz-appearance:none;appearance:none;list-style:none}.maplibregl-ctrl-attrib summary.maplibregl-ctrl-attrib-button::-webkit-details-marker{display:none}.maplibregl-ctrl-bottom-left .maplibregl-ctrl-attrib-button,.maplibregl-ctrl-top-left .maplibregl-ctrl-attrib-button{left:0}.maplibregl-ctrl-attrib.maplibregl-compact .maplibregl-ctrl-attrib-button,.maplibregl-ctrl-attrib.maplibregl-compact-show .maplibregl-ctrl-attrib-inner{display:block}.maplibregl-ctrl-attrib.maplibregl-compact-show .maplibregl-ctrl-attrib-button{background-color:rgb(0 0 0/5%)}.maplibregl-ctrl-bottom-right>.maplibregl-ctrl-attrib.maplibregl-compact:after{bottom:0;right:0}.maplibregl-ctrl-top-right>.maplibregl-ctrl-attrib.maplibregl-compact:after{right:0;top:0}.maplibregl-ctrl-top-left>.maplibregl-ctrl-attrib.maplibregl-compact:after{left:0;top:0}.maplibregl-ctrl-bottom-left>.maplibregl-ctrl-attrib.maplibregl-compact:after{bottom:0;left:0}}@media screen and (forced-colors:active){.maplibregl-ctrl-attrib.maplibregl-compact:after{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='%23fff' fill-rule='evenodd' viewBox='0 0 20 20'%3E%3Cpath d='M4 10a6 6 0 1 0 12 0 6 6 0 1 0-12 0m5-3a1 1 0 1 0 2 0 1 1 0 1 0-2 0m0 3a1 1 0 1 1 2 0v3a1 1 0 1 1-2 0'/%3E%3C/svg%3E")}}@media screen and (forced-colors:active) and (prefers-color-scheme:light){.maplibregl-ctrl-attrib.maplibregl-compact:after{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill-rule='evenodd' viewBox='0 0 20 20'%3E%3Cpath d='M4 10a6 6 0 1 0 12 0 6 6 0 1 0-12 0m5-3a1 1 0 1 0 2 0 1 1 0 1 0-2 0m0 3a1 1 0 1 1 2 0v3a1 1 0 1 1-2 0'/%3E%3C/svg%3E")}}.maplibregl-ctrl-attrib a{color:rgba(0,0,0,.75);text-decoration:none}.maplibregl-ctrl-attrib a:hover{color:inherit;text-decoration:underline}.maplibregl-attrib-empty{display:none}.maplibregl-ctrl-scale{background-color:hsla(0,0%,100%,.75);border:2px solid #333;border-top:#333;box-sizing:border-box;color:#333;font-size:10px;padding:0 5px}.maplibregl-popup{display:flex;left:0;pointer-events:none;position:absolute;top:0;will-change:transform}.maplibregl-popup-anchor-top,.maplibregl-popup-anchor-top-left,.maplibregl-popup-anchor-top-right{flex-direction:column}.maplibregl-popup-anchor-bottom,.maplibregl-popup-anchor-bottom-left,.maplibregl-popup-anchor-bottom-right{flex-direction:column-reverse}.maplibregl-popup-anchor-left{flex-direction:row}.maplibregl-popup-anchor-right{flex-direction:row-reverse}.maplibregl-popup-tip{border:10px solid transparent;height:0;width:0;z-index:1}.maplibregl-popup-anchor-top .maplibregl-popup-tip{align-self:center;border-bottom-color:#fff;border-top:none}.maplibregl-popup-anchor-top-left .maplibregl-popup-tip{align-self:flex-start;border-bottom-color:#fff;border-left:none;border-top:none}.maplibregl-popup-anchor-top-right .maplibregl-popup-tip{align-self:flex-end;border-bottom-color:#fff;border-right:none;border-top:none}.maplibregl-popup-anchor-bottom .maplibregl-popup-tip{align-self:center;border-bottom:none;border-top-color:#fff}.maplibregl-popup-anchor-bottom-left .maplibregl-popup-tip{align-self:flex-start;border-bottom:none;border-left:none;border-top-color:#fff}.maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip{align-self:flex-end;border-bottom:none;border-right:none;border-top-color:#fff}.maplibregl-popup-anchor-left .maplibregl-popup-tip{align-self:center;border-left:none;border-right-color:#fff}.maplibregl-popup-anchor-right .maplibregl-popup-tip{align-self:center;border-left-color:#fff;border-right:none}.maplibregl-popup-close-button{background-color:transparent;border:0;border-radius:0 3px 0 0;cursor:pointer;position:absolute;right:0;top:0}.maplibregl-popup-close-button:hover{background-color:rgb(0 0 0/5%)}.maplibregl-popup-content{background:#fff;border-radius:3px;box-shadow:0 1px 2px rgba(0,0,0,.1);padding:15px 10px;pointer-events:auto;position:relative}.maplibregl-popup-anchor-top-left .maplibregl-popup-content{border-top-left-radius:0}.maplibregl-popup-anchor-top-right .maplibregl-popup-content{border-top-right-radius:0}.maplibregl-popup-anchor-bottom-left .maplibregl-popup-content{border-bottom-left-radius:0}.maplibregl-popup-anchor-bottom-right .maplibregl-popup-content{border-bottom-right-radius:0}.maplibregl-popup-track-pointer{display:none}.maplibregl-popup-track-pointer *{pointer-events:none;-webkit-user-select:none;-moz-user-select:none;user-select:none}.maplibregl-map:hover .maplibregl-popup-track-pointer{display:flex}.maplibregl-map:active .maplibregl-popup-track-pointer{display:none}.maplibregl-marker{left:0;position:absolute;top:0;transition:opacity .2s;will-change:transform}.maplibregl-user-location-dot,.maplibregl-user-location-dot:before{background-color:#1da1f2;border-radius:50%;height:15px;width:15px}.maplibregl-user-location-dot:before{animation:maplibregl-user-location-dot-pulse 2s infinite;content:"";position:absolute}.maplibregl-user-location-dot:after{border:2px solid #fff;border-radius:50%;box-shadow:0 0 3px rgba(0,0,0,.35);box-sizing:border-box;content:"";height:19px;left:-2px;position:absolute;top:-2px;width:19px}@keyframes maplibregl-user-location-dot-pulse{0%{opacity:1;transform:scale(1)}70%{opacity:0;transform:scale(3)}to{opacity:0;transform:scale(1)}}.maplibregl-user-location-dot-stale{background-color:#aaa}.maplibregl-user-location-dot-stale:after{display:none}.maplibregl-user-location-accuracy-circle{background-color:#1da1f233;border-radius:100%;height:1px;width:1px}.maplibregl-crosshair,.maplibregl-crosshair .maplibregl-interactive,.maplibregl-crosshair .maplibregl-interactive:active{cursor:crosshair}.maplibregl-boxzoom{background:#fff;border:2px dotted #202020;height:0;left:0;opacity:.5;position:absolute;top:0;width:0}.maplibregl-cooperative-gesture-screen{align-items:center;background:rgba(0,0,0,.4);color:#fff;display:flex;font-size:1.4em;inset:0;justify-content:center;line-height:1.2;opacity:0;padding:1rem;pointer-events:none;position:absolute;transition:opacity 1s ease 1s;z-index:99999}.maplibregl-cooperative-gesture-screen.maplibregl-show{opacity:1;transition:opacity .05s}.maplibregl-cooperative-gesture-screen .maplibregl-mobile-message{display:none}@media (hover:none),(width <= 480px){.maplibregl-cooperative-gesture-screen .maplibregl-desktop-message{display:none}.maplibregl-cooperative-gesture-screen .maplibregl-mobile-message{display:block}}.maplibregl-pseudo-fullscreen{height:100%!important;left:0!important;position:fixed!important;top:0!important;width:100%!important;z-index:99999}
+.maplibregl-map { font-family: var(--font-body); }
+.maplibregl-ctrl-attrib { font-size: 10px; }
+.maplibregl-ctrl-group { border-radius: 10px !important; box-shadow: 0 1px 4px rgba(0,0,0,.18) !important; }
+.lmk { cursor: pointer; }
+.lmk.left .l { left: auto; right: 36px; }
+
+.lmk .b { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; color: #fff;
+  font-family: var(--font-display); font-weight: 700; font-size: 14px; border: 3px solid var(--card);
+  box-shadow: 0 2px 6px rgba(0,0,0,.25); transition: transform .15s; }
+.lmk .l { position: absolute; left: 36px; top: 5px; white-space: nowrap; font-size: 12.5px; font-weight: 700; color: var(--ink);
+  background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 0 6px; line-height: 20px; }
+.lmk.active .b { transform: scale(1.18); border-color: var(--mango); }
+.lmk.active .l { border-color: var(--mango); }
+</style>
+
+<div class="app">
+  <main class="story" id="story" aria-live="polite"></main>
+  <aside class="stage">
+    <div class="mapbox" id="mapbox"></div>
+    <p class="map-note" id="mapNote"></p>
+  </aside>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script>
+const KINDS = {
+  stay: { label: "住宿", glyph: "住", color: "var(--stay)" },
+  food: { label: "美食", glyph: "食", color: "var(--food)" },
+  play: { label: "景點", glyph: "玩", color: "var(--play)" },
+  park: { label: "公園", glyph: "園", color: "var(--park)" },
+  move: { label: "交通", glyph: "站", color: "var(--move)" },
+  wish: { label: "想去", glyph: "想", color: "var(--ink-soft)" }
+};
+
+// 每趟旅程一筆。新增旅程時只要往這個陣列加資料。
+const TRIPS = [
+  {
+    id: "hsinchu-2026-10",
+    title: "竹北公園散步，一路玩到火鍋",
+    region: "新竹・竹北",
+    stamp: "竹",
+    county: "新竹縣",
+    mapData: "hsinchu-zhubei",
+    map: { minZoom: 12, maxZoom: 17, bounds: [[24.790, 120.965], [24.840, 121.055]] },
+    pin: { lon: 121.03, lat: 24.82, label: "新竹" },
+    dates: "2026/10/9 – 10/11",
+    length: "三天兩夜",
+    transport: ["高鐵", "Uber"],
+    hook: "從喜來登走路出發，連玩四座特色公園，再去動物園看狐獴寶寶。",
+    lead: "搭高鐵到竹北，市區移動靠 Uber。這趟最特別的一段，是某個上午從飯店走路出發，全程約 2 公里，一路玩了四座公園，順便看看沿街的巷弄和招牌。小芒果和小鳳梨玩累了，中午去吃火鍋，非常滿足。",
+    blog: { title: "走不動的小女兒，和一個上午的四個公園", url: "https://vocus.cc/article/6acdc82efd89780001361d6b" },
+    story: {
+      title: "爸爸的旅行筆記",
+      text: [
+        "小女兒一路喊走不動，但在小橋下看到魚的那一刻，馬上跑過去看，疲累好像一下子不見了。",
+        "孩子替公園取的名字不一定對，但那不重要，重要的是一起走過的過程。走得越慢，回憶反而越深。",
+        "旅行不必排得太滿，一個上午、四個公園就夠了。動物園的狐獴和小狐獴，也是這趟最難忘的畫面之一。"
+      ]
+    },
+    places: [
+      { id: "hsr", kind: "move", name: "高鐵新竹站", offRoute: true, lon: 121.0402, lat: 24.8081,
+        note: "從這裡下車，接著叫 Uber 到飯店。", tags: ["抵達"] },
+      { id: "sheraton", kind: "stay", name: "新竹喜來登大飯店", lon: 121.02800, lat: 24.82071,
+        note: "這趟的住宿，也是走路玩公園的起點。10/10 的晚餐就在飯店吃 Buffet，事先買電子票比現場購票便宜。", tags: ["散步起點", "Buffet 晚餐"] },
+      { id: "veg", kind: "park", name: "莊敬蔬果公園", lon: 121.02898, lat: 24.82391, address: "新竹縣竹北市莊敬六街110號",
+        nick: "水果公園", age: "學齡前",
+        note: "散步的第一站。主角是一座土星造型的遊戲塔，連著三道滑梯和攀爬網。", tags: ["兒5公園", "土星遊戲塔"] },
+      { id: "snail", kind: "park", name: "小蝸牛之家公園", lon: 121.03058, lat: 24.82858, area: "竹北市北興里",
+        nick: "蝸牛公園", age: "學齡前",
+        note: "遊具都是小尺寸：小平台、小滑梯、鞦韆和沙坑，玩完旁邊就有洗手台。", tags: ["兒24公園", "沙坑", "有洗手台"] },
+      { id: "rafflesia", kind: "park", name: "大王花公園", lon: 121.02807, lat: 24.83094, area: "竹北市北興里",
+        nick: "大王花公園", age: "4 歲以上",
+        note: "花瓣造型的遊具，有水管滑梯、攀岩牆和攀爬網，要自己爬上去才能溜，比較有挑戰性。", tags: ["兒22公園", "攀岩牆"],
+        tip: "附近似乎沒有廁所，建議先在便利商店解決。" },
+      { id: "bridge", kind: "park", name: "竹北長橋公園", labelLeft: true, lon: 121.02630, lat: 24.83093, address: "新竹縣竹北市十興路267號",
+        nick: "板橋公園", age: "學齡前",
+        note: "狹長的路邊公園，有滾輪滑梯、攀岩牆和鳥巢鞦韆。在這裡跟剛認識的小朋友玩鬼抓人，玩到爸爸先沒力，才去便利商店補水、準備吃午餐。", tags: ["滾輪滑梯", "鳥巢鞦韆"],
+        tip: "附近似乎沒有廁所，旁邊的便利商店可以休息補水。" },
+      { id: "gungun", kind: "food", name: "滾滾風居 GUNGUN FONDUE", labelLeft: true, lon: 121.02643, lat: 24.82425,
+        address: "新竹縣竹北市勝利五路50號",
+        note: "中午的火鍋。清水模風格的建築，座位區很寬敞，冰淇淋口味選擇很多，吃完非常滿足。",
+        tags: ["清水模建築", "座位寬敞", "冰淇淋多"] },
+      { id: "zoo", kind: "play", name: "新竹市立動物園", lon: 120.9798, lat: 24.8007, offRoute: true, day: "10/10",
+        note: "最有印象的是狐獴，非常可愛，還看到了小狐獴。", tags: ["狐獴", "狐獴寶寶"] },
+      { id: "bigcity", kind: "food", name: "Big City 遠東巨城購物中心", lon: 120.97570, lat: 24.80998, offRoute: true, day: "10/10 午餐", area: "新竹市",
+        note: "逛完動物園後來這裡吃午餐。",
+        tags: ["百貨美食"], tip: "當天巨城周邊塞車塞得很嚴重，我們提早在隔一條街下車，走路過去反而比較快。" },
+      { id: "canal", kind: "wish", wish: true, name: "水圳森林公園", lon: 121.03636, lat: 24.81020, area: "竹北",
+        note: "就在飯店附近，這次沒排進行程。" },
+      { id: "hakka", kind: "wish", wish: true, name: "新瓦屋客家文化保存區", lon: 121.02790, lat: 24.81202, area: "竹北",
+        note: "離飯店不遠，這次沒排進行程。" },
+      { id: "insect", kind: "wish", wish: true, offRoute: true, labelLeft: true, name: "台灣昆蟲館 新竹館", lon: 120.97842, lat: 24.80069, area: "新竹市",
+        note: "就在動物園旁邊，這次沒排進行程，下次逛動物園可以順路去。" }
+    ],
+    route: {
+      title: "從飯店走路玩公園",
+      sub: "一個上午、約 2 公里，沿途四座公園，中午以火鍋收尾",
+      how: [
+        "大人放慢腳步、牽著手走，竹北的人行道走起來很安全。",
+        "孩子說走不動時先別急著抱，鼓勵她一步一步走，需要就停下來休息。",
+        "沿路丟問題轉移注意力，例如看到冰淇淋招牌，就問她想吃什麼口味。",
+        "真的累了就抱一段，爸爸也抱不動時，再請她下來自己走。"
+      ],
+      tips: [
+        "大王花公園和長橋公園附近似乎沒有廁所，出發前或沿途便利商店先上。",
+        "大太陽下滑梯可能很燙，讓孩子溜之前先用手摸一下。"
+      ],
+      stops: ["sheraton", "veg", "snail", "rafflesia", "bridge", "gungun"]
+    }
+  }
+];
+
+// 台灣縣市邊界（來源：taiwan-atlas，已簡化並預先投影成 SVG 路徑）
+const TW = {"W":440,"H":601,"minLon":119.3,"maxLat":25.35,"k":0.915663,"s":171.6166,"counties":[{"name":"宜蘭縣","d":"M418.0 86.7L418.2 88.3L416.1 88.3L414.0 86.6L416.0 85.6L418.0 86.7ZM418.9 63.0L412.6 65.5L409.3 70.4L406.7 71.2L406.3 74.0L400.9 78.9L397.7 85.7L395.8 94.9L395.8 100.4L397.4 107.0L398.9 108.4L398.9 116.2L399.9 121.0L402.1 125.8L406.2 128.1L404.4 129.3L405.4 132.2L403.8 132.8L404.4 139.9L403.8 141.0L399.4 142.4L399.2 146.2L402.3 148.7L396.1 152.5L396.3 153.4L393.1 157.1L391.5 161.6L390.8 167.8L388.3 174.6L388.8 177.6L386.4 177.8L384.2 176.3L379.4 175.6L374.6 173.2L373.4 173.8L371.5 171.8L369.1 171.7L366.3 168.1L364.8 168.8L366.6 174.2L364.3 172.5L363.9 174.5L360.9 175.4L362.5 178.0L355.2 176.3L354.5 174.8L346.4 172.8L345.4 173.5L338.2 169.1L335.9 166.0L330.3 166.5L327.0 168.7L325.8 168.5L324.5 164.9L320.3 164.7L318.7 163.3L318.7 157.2L317.1 155.9L318.0 153.3L320.9 149.0L325.4 146.2L325.8 144.2L327.4 144.1L330.3 140.9L329.2 136.3L331.9 133.3L330.5 130.1L332.0 128.1L334.4 127.7L338.1 120.0L337.8 118.0L339.3 116.2L342.6 116.0L344.6 116.1L347.6 114.2L351.5 113.5L352.5 110.6L356.8 109.2L361.0 106.8L359.8 102.6L361.0 99.1L360.2 96.5L365.4 95.2L365.5 92.9L371.0 92.5L375.5 91.4L375.2 90.2L382.3 84.8L386.7 84.7L390.5 81.7L390.0 79.0L394.7 76.1L397.9 76.4L401.0 73.2L399.1 70.0L400.3 66.9L406.8 66.4L409.0 64.5L418.4 62.2L418.9 63.0Z","c":[367.8,133.9]},{"name":"彰化縣","d":"M181.7 196.1L189.3 198.9L192.4 205.5L193.6 209.9L196.4 212.1L206.2 214.1L206.7 217.2L208.3 219.8L208.2 226.5L211.3 227.2L211.6 225.9L216.6 229.3L215.7 230.7L211.0 230.1L210.2 232.8L212.2 234.3L211.6 238.0L208.6 239.9L210.1 242.5L209.1 247.4L209.8 249.1L207.4 254.8L208.7 256.1L207.3 258.9L210.5 261.3L212.3 263.8L216.0 262.6L217.5 265.8L210.6 268.4L206.6 267.5L203.1 267.5L196.5 265.8L190.3 266.0L181.0 263.0L178.1 260.8L174.5 261.5L168.2 261.1L166.6 262.0L158.4 262.5L150.1 260.1L147.1 257.7L144.6 254.6L147.0 251.4L150.5 249.0L150.3 247.5L152.3 243.6L153.9 242.9L154.6 239.3L158.3 236.3L159.7 231.8L162.5 229.3L163.6 224.9L163.8 221.4L167.1 217.8L170.4 216.6L170.0 215.1L172.4 211.5L175.4 202.6L176.7 200.2L179.8 199.3L181.7 196.1Z","c":[183.7,237.7]},{"name":"南投縣","d":"M210.6 268.4L217.5 265.8L216.0 262.6L212.3 263.8L210.5 261.3L207.3 258.9L208.7 256.1L207.4 254.8L209.8 249.1L209.1 247.4L210.1 242.5L208.6 239.9L211.6 238.0L212.2 234.3L210.2 232.8L211.0 230.1L215.7 230.7L216.6 229.3L221.0 230.8L225.0 230.1L227.2 231.9L231.1 230.1L233.3 227.5L236.8 220.7L240.3 219.4L240.2 215.5L241.4 211.6L242.8 210.3L247.1 211.6L248.5 214.4L248.0 217.1L250.1 214.7L250.0 211.8L254.6 213.2L259.3 209.7L263.2 211.6L265.9 210.9L270.3 204.4L275.4 205.1L281.5 200.3L283.8 197.8L288.6 198.0L290.4 195.1L293.5 193.0L295.5 195.3L298.1 193.4L301.7 192.3L304.5 194.0L307.2 189.9L308.9 189.5L311.2 192.2L314.1 191.2L318.1 191.7L321.0 193.3L322.1 197.3L318.3 198.0L315.2 200.8L312.1 201.2L312.4 204.7L311.4 208.4L313.6 209.0L316.8 211.7L318.7 212.0L317.3 215.3L317.9 217.1L314.1 221.1L311.6 222.4L312.0 224.9L308.0 233.0L308.8 235.9L310.8 237.5L309.9 242.3L310.3 247.5L309.0 249.1L308.8 253.5L306.9 254.4L304.8 259.0L304.0 263.9L302.9 264.5L303.0 268.5L299.3 270.7L299.6 272.4L303.8 274.9L303.1 275.6L305.0 281.6L304.7 285.4L303.7 287.2L304.1 289.8L302.4 293.6L302.5 295.7L300.6 300.3L297.7 300.2L295.2 303.2L291.2 302.6L292.3 305.5L290.1 308.2L290.8 312.5L288.4 314.9L286.1 313.9L281.6 314.9L277.9 314.3L276.9 317.6L273.3 321.9L276.4 324.0L275.2 325.9L269.5 328.6L269.6 325.8L268.5 324.0L262.1 322.4L260.5 322.7L258.9 323.1L254.2 321.7L249.4 321.7L248.4 323.0L245.7 322.0L241.8 322.4L240.0 320.3L239.4 315.6L237.1 311.3L239.0 306.7L239.7 302.6L237.9 300.2L236.3 300.9L232.5 300.1L230.1 298.2L224.8 298.5L222.9 295.2L220.8 297.4L218.7 296.8L217.4 298.5L213.9 298.5L211.4 295.0L209.8 296.9L208.9 294.3L211.6 287.9L211.9 286.1L210.4 281.4L211.3 276.9L213.1 277.1L213.0 273.6L210.6 268.4Z","c":[264.4,258.6]},{"name":"雲林縣","d":"M122.7 313.3L125.1 315.7L122.9 315.5L121.2 318.5L118.5 318.9L114.7 321.0L113.9 324.3L111.2 324.2L113.0 328.4L109.5 323.4L112.5 320.2L122.7 313.3ZM125.6 310.3L126.5 311.3L125.1 313.8L124.3 312.1L125.6 310.3ZM130.8 309.5L130.8 309.5L130.8 309.5L130.8 309.5ZM130.8 306.6L128.1 309.6L127.6 307.9L130.8 306.6ZM130.5 305.6L130.5 305.6L130.5 305.6L130.5 305.6ZM144.6 254.6L147.1 257.7L150.1 260.1L158.4 262.5L166.6 262.0L168.2 261.1L174.5 261.5L178.1 260.8L181.0 263.0L190.3 266.0L196.5 265.8L203.1 267.5L206.6 267.5L210.6 268.4L213.0 273.6L213.1 277.1L211.3 276.9L210.4 281.4L211.9 286.1L211.6 287.9L208.9 294.3L209.8 296.9L211.4 295.0L213.9 298.5L217.4 298.5L218.7 296.8L220.8 297.4L222.9 295.2L224.8 298.5L225.7 305.4L222.8 305.6L219.1 304.4L216.3 305.4L215.4 304.0L212.3 305.1L211.5 301.4L205.8 303.3L200.6 303.2L197.5 301.6L194.4 301.2L191.3 298.4L189.1 294.3L186.3 295.1L179.8 295.1L177.6 297.2L173.3 295.7L170.8 296.7L169.7 298.6L167.6 299.0L166.6 301.1L162.4 301.7L162.3 303.9L158.2 305.2L158.8 306.4L155.5 307.0L155.7 308.8L153.4 310.0L152.7 312.2L150.2 309.6L148.0 310.4L148.8 314.7L145.1 316.7L142.2 315.5L138.4 315.8L132.9 313.9L133.6 312.0L131.9 309.0L132.5 305.1L131.6 296.8L131.7 294.9L129.4 296.6L128.1 294.1L129.5 292.9L132.8 284.6L133.1 282.0L136.1 276.0L136.6 273.1L134.6 268.7L140.3 262.7L142.6 259.6L144.6 254.6Z","c":[169.7,284.9]},{"name":"基隆市","d":"M393.4 36.7L393.2 39.2L391.3 40.8L388.6 39.5L385.9 41.5L386.4 45.6L389.0 48.1L386.9 50.3L382.2 51.0L379.1 48.4L377.0 48.5L370.2 44.0L369.1 42.6L368.2 38.1L365.6 36.1L370.6 33.9L373.6 33.3L378.7 29.8L378.3 31.6L380.9 31.7L384.8 33.3L386.9 32.0L391.8 34.9L394.0 34.5L393.4 36.7ZM391.0 26.5L391.0 26.5L391.0 26.5L391.0 26.5Z","c":[380,40]},{"name":"台北市","d":"M356.9 26.2L358.9 26.7L358.1 31.6L359.8 32.0L359.8 34.0L362.1 36.7L360.7 40.6L365.6 43.6L365.9 45.2L364.0 49.1L365.3 53.6L371.5 56.1L366.3 55.8L365.0 57.1L361.0 57.5L361.5 64.0L364.6 65.3L361.0 66.8L358.1 65.8L355.3 66.1L354.2 62.8L350.7 61.7L351.0 59.4L348.7 56.7L347.1 56.4L345.3 58.3L343.9 57.4L343.1 54.0L345.9 52.2L346.8 48.1L344.0 43.4L339.0 41.7L339.2 39.0L346.1 30.3L348.9 31.0L349.1 29.4L352.4 27.6L354.4 24.3L356.9 26.2Z","c":[354,45.8]},{"name":"新北市","d":"M418.9 63.0L418.4 62.2L409.0 64.5L406.8 66.4L400.3 66.9L399.1 70.0L401.0 73.2L397.9 76.4L394.7 76.1L390.0 79.0L390.5 81.7L386.7 84.7L382.3 84.8L375.2 90.2L375.5 91.4L371.0 92.5L365.5 92.9L365.4 95.2L360.2 96.5L361.0 99.1L359.8 102.6L361.0 106.8L356.8 109.2L352.5 110.6L351.5 113.5L347.6 114.2L344.6 116.1L342.6 116.0L341.7 112.2L337.9 110.6L335.6 105.9L333.7 100.7L337.8 96.8L336.0 95.2L335.7 92.3L332.5 88.3L329.0 86.8L326.5 88.5L320.1 86.1L323.4 85.3L321.5 82.7L322.8 81.8L320.9 78.5L317.5 77.2L317.0 74.4L319.7 72.1L317.8 72.4L316.8 70.6L318.7 68.8L318.6 63.9L321.0 63.1L325.1 64.0L327.7 62.4L327.5 60.8L330.5 60.2L328.9 57.4L331.9 56.8L329.7 54.9L330.0 52.4L328.6 49.5L322.9 48.9L321.2 47.2L322.2 46.1L318.2 44.2L314.7 43.5L311.6 41.2L311.7 39.8L315.8 38.5L317.4 38.9L322.7 37.5L328.4 34.7L328.7 31.2L330.4 32.8L333.0 29.6L330.7 28.6L335.9 22.4L338.3 16.7L341.2 16.1L342.7 13.6L352.2 9.5L355.2 10.0L357.9 8.8L361.0 10.0L365.1 13.1L366.8 15.4L366.8 18.8L372.5 25.3L376.5 25.1L374.9 27.5L376.0 29.2L378.7 29.8L373.6 33.3L370.6 33.9L365.6 36.1L368.2 38.1L369.1 42.6L370.2 44.0L377.0 48.5L379.1 48.4L382.2 51.0L386.9 50.3L389.0 48.1L386.4 45.6L385.9 41.5L388.6 39.5L391.3 40.8L393.2 39.2L393.4 36.7L397.0 36.8L396.4 39.2L399.3 38.0L407.3 39.5L412.8 38.0L411.2 40.1L412.7 41.5L410.8 44.7L411.0 46.7L413.6 49.2L413.2 53.2L416.0 56.4L420.1 55.5L423.9 56.7L425.1 59.8L418.9 63.0ZM356.9 26.2L354.4 24.3L352.4 27.6L349.1 29.4L348.9 31.0L346.1 30.3L339.2 39.0L339.0 41.7L344.0 43.4L346.8 48.1L345.9 52.2L343.1 54.0L343.9 57.4L345.3 58.3L347.1 56.4L348.7 56.7L351.0 59.4L350.7 61.7L354.2 62.8L355.3 66.1L358.1 65.8L361.0 66.8L364.6 65.3L361.5 64.0L361.0 57.5L365.0 57.1L366.3 55.8L371.5 56.1L365.3 53.6L364.0 49.1L365.9 45.2L365.6 43.6L360.7 40.6L362.1 36.7L359.8 34.0L359.8 32.0L358.1 31.6L358.9 26.7L356.9 26.2Z","c":[359.9,60.4]},{"name":"台中市","d":"M317.1 155.9L318.7 157.2L318.7 163.3L320.3 164.7L324.5 164.9L325.8 168.5L327.0 168.7L330.3 166.5L335.9 166.0L338.2 169.1L335.6 172.1L335.5 176.3L333.4 178.9L330.8 178.8L330.4 180.9L326.9 183.7L327.7 187.9L322.6 189.8L321.0 193.3L318.1 191.7L314.1 191.2L311.2 192.2L308.9 189.5L307.2 189.9L304.5 194.0L301.7 192.3L298.1 193.4L295.5 195.3L293.5 193.0L290.4 195.1L288.6 198.0L283.8 197.8L281.5 200.3L275.4 205.1L270.3 204.4L265.9 210.9L263.2 211.6L259.3 209.7L254.6 213.2L250.0 211.8L250.1 214.7L248.0 217.1L248.5 214.4L247.1 211.6L242.8 210.3L241.4 211.6L240.2 215.5L240.3 219.4L236.8 220.7L233.3 227.5L231.1 230.1L227.2 231.9L225.0 230.1L221.0 230.8L216.6 229.3L211.6 225.9L211.3 227.2L208.2 226.5L208.3 219.8L206.7 217.2L206.2 214.1L196.4 212.1L193.6 209.9L192.4 205.5L189.3 198.9L181.7 196.1L184.8 193.2L188.3 186.4L192.3 177.5L193.6 176.7L197.9 171.6L198.4 169.7L207.7 156.1L210.5 158.3L211.9 161.4L214.3 162.6L218.7 168.5L221.1 170.3L224.8 171.3L229.2 175.3L233.2 177.0L236.6 177.5L241.0 181.8L244.7 182.1L247.5 181.1L252.1 181.5L255.0 179.6L254.0 174.3L257.0 172.8L260.9 174.2L267.9 174.7L270.0 178.3L272.7 180.7L275.3 180.4L275.8 178.4L280.0 176.1L280.8 177.2L284.2 174.9L286.3 174.9L289.3 170.0L293.5 169.8L294.4 167.7L297.0 166.2L298.1 163.6L299.7 163.4L301.1 166.6L303.5 165.8L305.4 162.1L305.5 159.6L307.6 158.7L307.8 156.5L308.1 158.1L315.1 157.4L317.1 155.9Z","c":[250.2,190.8]},{"name":"台南市","d":"M212.7 364.8L213.1 365.9L210.0 370.7L210.7 371.9L204.5 378.6L200.3 387.6L197.1 391.5L194.5 392.9L189.2 398.4L185.8 400.6L185.4 402.8L182.4 402.6L181.2 407.1L180.0 406.8L175.4 417.7L172.7 416.6L170.0 416.8L166.5 420.2L165.7 422.2L162.2 422.3L160.9 420.4L153.7 419.7L153.9 421.1L150.9 420.2L149.9 421.4L146.6 419.5L146.4 417.8L144.6 418.8L140.2 416.8L137.5 418.5L137.0 411.9L134.9 407.6L131.7 403.8L123.7 397.7L119.1 395.9L116.1 391.6L114.5 391.9L115.5 385.7L118.2 381.7L120.0 374.0L122.2 368.9L122.7 362.5L124.7 357.8L125.1 352.0L127.4 350.0L127.4 346.3L128.6 344.9L136.1 350.4L137.6 352.8L139.7 353.5L139.6 351.6L142.1 353.2L144.7 352.5L147.4 347.2L150.1 346.6L152.0 344.8L151.7 342.8L155.0 343.2L154.9 340.3L156.0 338.9L158.9 338.9L158.9 337.1L162.4 337.1L164.9 334.4L169.9 334.1L175.1 332.7L175.9 334.0L178.9 332.4L184.4 335.0L185.3 336.8L187.1 335.4L188.5 336.7L186.1 338.2L190.2 340.8L189.1 343.1L193.9 345.6L194.9 347.0L192.1 349.8L192.7 353.2L192.1 356.3L193.6 359.5L191.6 362.2L197.2 366.0L200.9 366.4L203.1 362.2L205.8 365.1L208.7 363.9L212.7 364.8Z","c":[161,377.4]},{"name":"桃園市","d":"M342.6 116.0L339.3 116.2L337.8 118.0L338.1 120.0L334.4 127.7L332.0 128.1L330.5 130.1L328.0 131.0L324.2 128.2L323.5 125.7L324.7 123.3L322.5 121.2L322.7 117.1L320.6 117.3L320.4 115.1L317.1 111.9L314.2 112.3L315.5 108.1L314.0 105.8L315.5 102.1L314.5 100.7L310.7 99.4L308.0 97.5L305.4 92.9L302.0 94.5L301.2 92.3L299.5 92.1L294.8 88.9L290.7 86.7L292.5 84.2L291.6 80.5L288.5 81.0L284.2 79.6L284.3 77.6L281.5 78.4L276.2 76.2L276.3 70.9L273.1 69.3L270.2 70.3L268.3 69.3L266.0 71.2L264.3 70.4L268.7 64.3L271.6 56.5L275.3 52.6L280.8 50.4L281.3 49.3L286.8 46.9L291.8 45.6L300.5 41.2L308.0 38.9L311.7 39.8L311.6 41.2L314.7 43.5L318.2 44.2L322.2 46.1L321.2 47.2L322.9 48.9L328.6 49.5L330.0 52.4L329.7 54.9L331.9 56.8L328.9 57.4L330.5 60.2L327.5 60.8L327.7 62.4L325.1 64.0L321.0 63.1L318.6 63.9L318.7 68.8L316.8 70.6L317.8 72.4L319.7 72.1L317.0 74.4L317.5 77.2L320.9 78.5L322.8 81.8L321.5 82.7L323.4 85.3L320.1 86.1L326.5 88.5L329.0 86.8L332.5 88.3L335.7 92.3L336.0 95.2L337.8 96.8L333.7 100.7L335.6 105.9L337.9 110.6L341.7 112.2L342.6 116.0Z","c":[307.7,76.7]},{"name":"苗栗縣","d":"M307.8 156.5L307.6 158.7L305.5 159.6L305.4 162.1L303.5 165.8L301.1 166.6L299.7 163.4L298.1 163.6L297.0 166.2L294.4 167.7L293.5 169.8L289.3 170.0L286.3 174.9L284.2 174.9L280.8 177.2L280.0 176.1L275.8 178.4L275.3 180.4L272.7 180.7L270.0 178.3L267.9 174.7L260.9 174.2L257.0 172.8L254.0 174.3L255.0 179.6L252.1 181.5L247.5 181.1L244.7 182.1L241.0 181.8L236.6 177.5L233.2 177.0L229.2 175.3L224.8 171.3L221.1 170.3L218.7 168.5L214.3 162.6L211.9 161.4L210.5 158.3L207.7 156.1L214.6 148.7L215.0 145.9L217.6 142.2L222.5 128.5L228.8 123.3L229.1 121.6L233.9 117.2L239.3 116.2L244.5 111.1L245.4 107.8L247.4 105.0L251.0 105.8L252.3 104.6L253.6 108.5L257.0 109.4L263.5 110.4L261.5 114.4L266.7 119.3L268.7 119.1L268.4 121.1L271.1 121.6L275.5 126.1L276.8 125.0L278.7 126.4L280.2 130.5L278.2 135.0L277.0 136.0L279.8 138.8L279.3 141.0L277.7 141.9L278.4 146.2L282.5 146.5L286.6 144.1L289.9 143.8L293.8 145.4L301.3 143.5L301.5 146.2L304.0 148.0L305.5 151.0L308.4 153.6L307.8 156.5Z","c":[254.9,148.7]},{"name":"嘉義市","d":"M180.3 314.4L182.7 317.4L184.4 316.3L186.9 319.0L188.6 319.1L190.0 321.8L187.8 325.6L183.6 324.1L181.2 327.0L179.1 327.9L177.5 324.2L171.9 323.9L172.7 321.2L171.2 317.7L174.2 316.4L178.1 316.0L180.3 314.4Z","c":[180.4,320.9]},{"name":"嘉義縣","d":"M133.9 335.9L133.9 335.9L133.9 335.9L133.9 335.9ZM224.8 298.5L230.1 298.2L232.5 300.1L236.3 300.9L237.9 300.2L239.7 302.6L239.0 306.7L237.1 311.3L239.4 315.6L240.0 320.3L241.8 322.4L245.7 322.0L248.4 323.0L249.4 321.7L254.2 321.7L258.9 323.1L260.5 322.7L255.9 324.9L253.4 324.6L250.1 326.7L249.4 328.6L243.4 331.3L243.5 332.4L240.6 337.0L240.2 339.0L236.5 340.3L233.1 344.6L229.1 344.2L227.5 348.1L224.8 350.8L221.9 350.3L219.9 354.5L211.6 352.2L210.3 357.2L212.0 360.9L212.7 364.8L208.7 363.9L205.8 365.1L203.1 362.2L200.9 366.4L197.2 366.0L191.6 362.2L193.6 359.5L192.1 356.3L192.7 353.2L192.1 349.8L194.9 347.0L193.9 345.6L189.1 343.1L190.2 340.8L186.1 338.2L188.5 336.7L187.1 335.4L185.3 336.8L184.4 335.0L178.9 332.4L175.9 334.0L175.1 332.7L169.9 334.1L164.9 334.4L162.4 337.1L158.9 337.1L158.9 338.9L156.0 338.9L154.9 340.3L155.0 343.2L151.7 342.8L152.0 344.8L150.1 346.6L147.4 347.2L144.7 352.5L142.1 353.2L139.6 351.6L139.7 353.5L137.6 352.8L136.1 350.4L128.6 344.9L130.1 340.9L130.7 337.3L134.7 337.2L135.1 333.6L133.8 334.7L132.9 329.7L134.3 326.5L132.6 322.6L134.8 318.3L131.0 319.5L128.8 318.3L128.7 314.9L132.9 313.9L138.4 315.8L142.2 315.5L145.1 316.7L148.8 314.7L148.0 310.4L150.2 309.6L152.7 312.2L153.4 310.0L155.7 308.8L155.5 307.0L158.8 306.4L158.2 305.2L162.3 303.9L162.4 301.7L166.6 301.1L167.6 299.0L169.7 298.6L170.8 296.7L173.3 295.7L177.6 297.2L179.8 295.1L186.3 295.1L189.1 294.3L191.3 298.4L194.4 301.2L197.5 301.6L200.6 303.2L205.8 303.3L211.5 301.4L212.3 305.1L215.4 304.0L216.3 305.4L219.1 304.4L222.8 305.6L225.7 305.4L224.8 298.5ZM180.3 314.4L178.1 316.0L174.2 316.4L171.2 317.7L172.7 321.2L171.9 323.9L177.5 324.2L179.1 327.9L181.2 327.0L183.6 324.1L187.8 325.6L190.0 321.8L188.6 319.1L186.9 319.0L184.4 316.3L182.7 317.4L180.3 314.4Z","c":[191.4,326.1]},{"name":"高雄市","d":"M260.5 322.7L262.1 322.4L268.5 324.0L269.6 325.8L269.5 328.6L271.7 330.7L271.3 333.6L267.3 336.1L268.4 337.3L265.3 339.7L265.1 341.7L268.7 343.9L270.3 343.2L271.0 345.0L274.8 347.6L274.4 350.2L271.6 352.3L265.0 355.2L262.5 355.1L257.4 361.3L253.9 362.5L252.4 369.5L253.4 371.3L251.2 373.0L250.6 375.7L247.8 377.4L249.5 379.9L249.1 382.7L249.7 386.1L246.6 393.0L248.5 395.7L248.2 397.4L245.7 397.8L245.2 401.9L240.8 406.7L239.0 410.0L239.2 414.5L240.9 418.4L240.2 419.6L241.8 423.1L245.9 425.2L245.0 426.7L246.6 427.7L245.9 430.2L244.1 427.7L243.1 428.7L240.9 426.2L239.3 426.3L232.4 431.6L229.8 427.9L226.7 425.0L221.3 423.6L216.3 427.8L213.9 427.4L213.4 423.9L211.4 423.0L205.2 425.1L197.1 432.7L193.4 432.0L190.1 432.7L184.8 431.1L183.7 432.4L182.9 437.6L181.9 440.1L181.3 445.1L181.6 451.6L180.3 456.8L178.6 460.8L178.2 468.9L180.1 472.1L179.6 478.4L177.8 481.4L176.4 485.9L176.7 494.5L173.1 493.6L168.7 490.6L162.4 485.4L162.4 484.2L159.1 486.6L156.1 482.5L160.6 484.3L157.6 479.2L151.5 471.6L150.3 468.9L151.4 467.8L149.3 463.2L149.5 461.3L151.6 459.0L151.2 455.1L149.3 450.2L143.4 436.3L141.1 436.7L139.9 435.0L142.4 434.2L140.3 426.5L137.5 418.5L140.2 416.8L144.6 418.8L146.4 417.8L146.6 419.5L149.9 421.4L150.9 420.2L153.9 421.1L153.7 419.7L160.9 420.4L162.2 422.3L165.7 422.2L166.5 420.2L170.0 416.8L172.7 416.6L175.4 417.7L180.0 406.8L181.2 407.1L182.4 402.6L185.4 402.8L185.8 400.6L189.2 398.4L194.5 392.9L197.1 391.5L200.3 387.6L204.5 378.6L210.7 371.9L210.0 370.7L213.1 365.9L212.7 364.8L212.0 360.9L210.3 357.2L211.6 352.2L219.9 354.5L221.9 350.3L224.8 350.8L227.5 348.1L229.1 344.2L233.1 344.6L236.5 340.3L240.2 339.0L240.6 337.0L243.5 332.4L243.4 331.3L249.4 328.6L250.1 326.7L253.4 324.6L255.9 324.9L260.5 322.7Z","c":[207.1,403.9]},{"name":"台東縣","d":"M363.3 584.7L362.0 583.2L363.8 582.7L363.3 584.7ZM346.4 560.4L347.8 561.1L356.2 560.4L357.6 564.6L355.8 565.6L356.4 567.9L360.9 570.6L361.8 572.3L360.3 574.6L356.8 574.5L355.5 572.0L351.8 570.7L347.4 566.8L346.4 560.4ZM344.4 458.7L347.3 458.7L345.0 466.4L341.5 464.0L341.8 461.9L340.3 458.8L344.4 458.7ZM245.9 430.2L246.6 427.7L245.0 426.7L245.9 425.2L241.8 423.1L240.2 419.6L240.9 418.4L239.2 414.5L239.0 410.0L240.8 406.7L245.2 401.9L245.7 397.8L248.2 397.4L248.5 395.7L246.6 393.0L249.7 386.1L249.1 382.7L249.5 379.9L247.8 377.4L250.6 375.7L251.2 373.0L253.4 371.3L252.4 369.5L253.9 362.5L257.4 361.3L262.5 355.1L265.0 355.2L271.6 352.3L273.3 351.7L276.0 353.5L276.9 357.7L279.6 363.4L281.7 363.2L284.3 364.9L287.5 365.0L289.1 368.7L291.5 369.1L294.7 367.2L297.1 368.6L298.4 373.3L300.5 376.7L300.4 378.5L303.5 379.4L304.6 381.2L306.3 380.7L309.1 383.7L309.9 386.5L311.8 385.0L316.8 384.3L317.7 383.2L317.5 379.7L318.6 377.2L317.0 375.1L318.0 372.7L319.8 372.8L323.6 359.9L326.5 357.0L326.3 352.5L329.6 348.1L331.5 343.9L333.6 341.5L331.0 340.6L330.0 337.2L333.1 331.3L337.2 327.2L341.5 327.7L342.9 329.5L345.1 328.7L342.3 335.4L341.4 342.8L339.7 349.7L337.4 350.3L334.7 355.0L332.3 363.0L333.2 364.5L329.7 367.6L329.7 371.4L331.2 375.5L330.0 380.1L332.1 382.1L329.2 383.8L327.3 386.9L324.9 386.7L322.9 389.6L320.4 397.4L320.1 399.8L317.9 402.5L318.0 404.4L313.5 411.1L311.8 412.0L309.4 418.6L303.6 426.6L300.0 426.8L297.2 429.1L296.4 432.0L298.7 437.8L295.7 440.6L295.0 444.5L291.8 446.7L287.3 451.5L279.9 455.1L275.8 458.9L273.3 459.9L271.2 462.4L269.1 468.6L268.6 473.8L264.9 477.2L263.6 479.8L260.8 488.3L258.7 496.5L253.8 508.9L252.8 513.3L250.6 517.5L250.2 527.3L250.8 532.6L246.2 535.5L244.9 533.6L242.0 533.1L238.1 529.7L235.7 530.8L234.7 525.9L232.2 523.8L232.3 522.0L235.2 520.3L233.4 515.6L230.7 515.3L229.9 513.3L226.8 511.9L228.4 505.4L231.5 505.1L234.1 503.2L231.9 497.6L228.1 496.2L228.0 492.7L230.0 490.6L228.5 487.3L227.9 483.3L226.2 480.3L227.5 476.9L227.2 474.0L228.6 471.7L228.3 469.9L229.6 466.8L233.6 461.1L234.4 458.4L233.6 456.0L238.7 456.4L241.7 454.9L243.4 451.9L248.8 451.9L250.6 448.3L250.4 443.3L252.0 441.8L251.9 437.7L250.0 435.6L246.5 434.7L245.4 433.0L245.9 430.2Z","c":[272.3,424.8]},{"name":"花蓮縣","d":"M338.2 169.1L345.4 173.5L346.4 172.8L354.5 174.8L355.2 176.3L362.5 178.0L360.9 175.4L363.9 174.5L364.3 172.5L366.6 174.2L364.8 168.8L366.3 168.1L369.1 171.7L371.5 171.8L373.4 173.8L374.6 173.2L379.4 175.6L384.2 176.3L386.4 177.8L388.8 177.6L388.1 179.7L384.7 183.7L384.1 186.8L381.6 189.5L379.6 190.2L378.1 193.0L373.0 196.1L371.4 198.4L370.6 202.2L371.5 205.0L371.5 208.6L370.1 210.8L366.7 213.2L364.4 216.3L364.0 221.1L366.2 226.5L369.0 230.1L365.9 236.9L364.9 235.5L362.7 238.5L363.3 243.1L361.2 256.2L357.7 264.1L356.8 269.0L357.2 272.5L355.1 278.1L353.5 281.1L354.1 283.5L352.6 290.7L350.6 295.8L349.8 304.4L347.5 308.7L346.3 314.5L346.9 319.0L347.9 319.7L345.7 325.0L345.1 328.7L342.9 329.5L341.5 327.7L337.2 327.2L333.1 331.3L330.0 337.2L331.0 340.6L333.6 341.5L331.5 343.9L329.6 348.1L326.3 352.5L326.5 357.0L323.6 359.9L319.8 372.8L318.0 372.7L317.0 375.1L318.6 377.2L317.5 379.7L317.7 383.2L316.8 384.3L311.8 385.0L309.9 386.5L309.1 383.7L306.3 380.7L304.6 381.2L303.5 379.4L300.4 378.5L300.5 376.7L298.4 373.3L297.1 368.6L294.7 367.2L291.5 369.1L289.1 368.7L287.5 365.0L284.3 364.9L281.7 363.2L279.6 363.4L276.9 357.7L276.0 353.5L273.3 351.7L271.6 352.3L274.4 350.2L274.8 347.6L271.0 345.0L270.3 343.2L268.7 343.9L265.1 341.7L265.3 339.7L268.4 337.3L267.3 336.1L271.3 333.6L271.7 330.7L269.5 328.6L275.2 325.9L276.4 324.0L273.3 321.9L276.9 317.6L277.9 314.3L281.6 314.9L286.1 313.9L288.4 314.9L290.8 312.5L290.1 308.2L292.3 305.5L291.2 302.6L295.2 303.2L297.7 300.2L300.6 300.3L302.5 295.7L302.4 293.6L304.1 289.8L303.7 287.2L304.7 285.4L305.0 281.6L303.1 275.6L303.8 274.9L299.6 272.4L299.3 270.7L303.0 268.5L302.9 264.5L304.0 263.9L304.8 259.0L306.9 254.4L308.8 253.5L309.0 249.1L310.3 247.5L309.9 242.3L310.8 237.5L308.8 235.9L308.0 233.0L312.0 224.9L311.6 222.4L314.1 221.1L317.9 217.1L317.3 215.3L318.7 212.0L316.8 211.7L313.6 209.0L311.4 208.4L312.4 204.7L312.1 201.2L315.2 200.8L318.3 198.0L322.1 197.3L321.0 193.3L322.6 189.8L327.7 187.9L326.9 183.7L330.4 180.9L330.8 178.8L333.4 178.9L335.5 176.3L335.6 172.1L338.2 169.1Z","c":[326.7,274]},{"name":"澎湖縣","d":"M22.0 365.3L22.5 368.9L18.6 369.7L18.0 366.0L22.0 365.3ZM49.7 359.8L49.7 359.8L49.7 359.8L49.7 359.8ZM59.3 358.0L58.5 361.4L57.6 358.4L59.3 358.0ZM56.7 357.9L56.7 357.9L56.7 357.9L56.7 357.9ZM34.5 357.9L34.5 357.9L34.5 357.9L34.5 357.9ZM32.5 356.5L32.5 356.5L32.5 356.5L32.5 356.5ZM5.8 348.0L5.8 348.0L5.8 348.0L5.8 348.0ZM37.3 338.9L38.3 340.7L34.5 340.4L37.3 338.9ZM30.4 335.1L32.7 336.2L32.6 340.7L33.5 342.8L29.3 342.2L30.6 340.6L30.4 335.1ZM3.1 332.7L4.8 333.8L2.3 334.7L3.1 332.7ZM37.9 318.2L33.2 320.4L34.7 318.8L37.9 318.2ZM34.7 314.9L34.7 314.9L34.7 314.9L34.7 314.9ZM42.6 297.3L42.6 297.3L42.6 297.3L42.6 297.3ZM52.6 291.5L52.6 291.5L52.6 291.5L52.6 291.5ZM57.2 288.4L57.2 288.4L57.2 288.4L57.2 288.4ZM40.3 287.2L40.3 287.2L40.3 287.2L40.3 287.2ZM44.7 287.2L47.1 287.7L49.1 291.3L46.8 293.3L48.1 296.7L49.3 297.0L49.2 300.0L51.0 298.9L51.0 303.7L53.4 300.5L53.6 302.2L55.2 298.6L57.0 301.9L58.0 300.0L59.8 302.9L59.8 305.0L61.8 308.0L59.4 308.7L59.1 307.2L54.5 307.1L48.0 312.6L48.1 316.1L45.5 315.3L42.7 316.0L42.0 313.1L40.4 313.5L38.1 309.2L39.6 309.2L40.0 312.5L44.1 312.0L46.5 312.9L47.6 310.6L45.9 308.4L42.9 309.6L43.9 306.6L40.8 306.8L41.8 304.9L41.2 302.8L44.4 301.9L45.2 305.1L46.7 305.7L48.2 302.9L47.6 300.2L48.7 298.5L46.8 297.7L46.2 293.2L42.6 289.6L41.4 291.5L40.0 290.5L37.7 294.5L34.2 295.7L35.1 300.0L33.4 301.7L33.8 306.5L31.1 305.8L26.3 306.9L28.8 304.5L30.4 305.4L32.1 302.5L29.8 301.2L32.8 298.1L31.3 296.9L33.7 290.8L34.5 292.7L37.8 293.4L39.9 290.4L40.1 288.6L44.7 287.2ZM48.7 281.3L48.7 281.3L48.7 281.3L48.7 281.3ZM39.6 279.6L39.6 279.6L39.6 279.6L39.6 279.6ZM49.1 273.6L50.8 275.8L47.7 277.7L46.5 276.7L49.1 273.6ZM48.1 270.2L48.1 270.2L48.1 270.2L48.1 270.2Z","c":[45.9,302.5]},{"name":"新竹市","d":"M257.0 109.4L253.6 108.5L252.3 104.6L251.0 105.8L247.4 105.0L251.1 100.5L250.2 95.8L251.9 90.3L255.4 85.0L257.8 85.8L260.1 88.5L267.2 90.6L270.5 94.1L272.3 100.9L270.4 101.8L269.3 99.4L266.0 97.7L265.1 99.8L262.4 100.4L259.9 104.1L258.7 103.8L257.0 109.4Z","c":[258.8,96.7]},{"name":"新竹縣","d":"M330.5 130.1L331.9 133.3L329.2 136.3L330.3 140.9L327.4 144.1L325.8 144.2L325.4 146.2L320.9 149.0L318.0 153.3L317.1 155.9L315.1 157.4L308.1 158.1L307.8 156.5L308.4 153.6L305.5 151.0L304.0 148.0L301.5 146.2L301.3 143.5L293.8 145.4L289.9 143.8L286.6 144.1L282.5 146.5L278.4 146.2L277.7 141.9L279.3 141.0L279.8 138.8L277.0 136.0L278.2 135.0L280.2 130.5L278.7 126.4L276.8 125.0L275.5 126.1L271.1 121.6L268.4 121.1L268.7 119.1L266.7 119.3L261.5 114.4L263.5 110.4L257.0 109.4L258.7 103.8L259.9 104.1L262.4 100.4L265.1 99.8L266.0 97.7L269.3 99.4L270.4 101.8L272.3 100.9L270.5 94.1L267.2 90.6L260.1 88.5L257.8 85.8L255.4 85.0L257.6 82.9L262.4 72.3L264.3 70.4L266.0 71.2L268.3 69.3L270.2 70.3L273.1 69.3L276.3 70.9L276.2 76.2L281.5 78.4L284.3 77.6L284.2 79.6L288.5 81.0L291.6 80.5L292.5 84.2L290.7 86.7L294.8 88.9L299.5 92.1L301.2 92.3L302.0 94.5L305.4 92.9L308.0 97.5L310.7 99.4L314.5 100.7L315.5 102.1L314.0 105.8L315.5 108.1L314.2 112.3L317.1 111.9L320.4 115.1L320.6 117.3L322.7 117.1L322.5 121.2L324.7 123.3L323.5 125.7L324.2 128.2L328.0 131.0L330.5 130.1Z","c":[292.8,114.8]},{"name":"屏東縣","d":"M169.7 513.8L170.8 516.3L167.7 518.9L165.7 519.4L166.7 515.5L169.7 513.8ZM176.7 494.5L176.4 485.9L177.8 481.4L179.6 478.4L180.1 472.1L178.2 468.9L178.6 460.8L180.3 456.8L181.6 451.6L181.3 445.1L181.9 440.1L182.9 437.6L183.7 432.4L184.8 431.1L190.1 432.7L193.4 432.0L197.1 432.7L205.2 425.1L211.4 423.0L213.4 423.9L213.9 427.4L216.3 427.8L221.3 423.6L226.7 425.0L229.8 427.9L232.4 431.6L239.3 426.3L240.9 426.2L243.1 428.7L244.1 427.7L245.9 430.2L245.4 433.0L246.5 434.7L250.0 435.6L251.9 437.7L252.0 441.8L250.4 443.3L250.6 448.3L248.8 451.9L243.4 451.9L241.7 454.9L238.7 456.4L233.6 456.0L234.4 458.4L233.6 461.1L229.6 466.8L228.3 469.9L228.6 471.7L227.2 474.0L227.5 476.9L226.2 480.3L227.9 483.3L228.5 487.3L230.0 490.6L228.0 492.7L228.1 496.2L231.9 497.6L234.1 503.2L231.5 505.1L228.4 505.4L226.8 511.9L229.9 513.3L230.7 515.3L233.4 515.6L235.2 520.3L232.3 522.0L232.2 523.8L234.7 525.9L235.7 530.8L238.1 529.7L242.0 533.1L244.9 533.6L246.2 535.5L250.8 532.6L250.9 540.0L250.0 541.4L250.3 549.1L250.9 550.8L249.3 552.6L250.2 556.1L251.7 556.8L250.5 559.7L250.4 566.4L251.6 569.2L249.7 570.5L247.6 575.1L243.3 576.9L242.3 581.8L243.4 586.3L245.5 589.1L246.3 591.6L243.7 592.7L243.0 589.7L241.6 589.3L239.2 586.2L233.0 584.6L230.2 581.9L228.4 582.6L226.2 588.7L224.5 588.9L221.7 586.2L222.1 578.2L219.0 574.5L217.7 570.8L220.9 562.8L219.9 560.7L222.6 558.9L221.4 553.8L219.6 550.8L219.9 549.2L217.6 538.8L215.6 534.9L212.0 531.0L212.5 528.9L210.0 521.2L205.1 516.1L202.0 511.5L196.4 507.6L189.9 504.2L182.1 499.5L176.7 494.5Z","c":[216.4,492]}]};
+
+const story = document.getElementById("story");
+const mapbox = document.getElementById("mapbox");
+const mapNote = document.getElementById("mapNote");
+let activePlace = null;
+
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const gmap = p => "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(p.address || (p.area ? p.name + " " + p.area : p.name));
+
+function brandHTML() {
+  return `<header class="brand">
+    <h1><span class="m">芒果</span><span class="p">鳳梨</span>散步地圖</h1>
+    <p class="tag">帶孩子旅行，把世界變成故事</p>
+    <p class="motto">走在巷弄與騎樓下，看風景、聽聲音、聞味道，把沿途遇見的人事物記下來。少則得，多則惑。</p>
+  </header>`;
+}
+
+/* ---------- 總覽 ---------- */
+function renderOverview() {
+  activePlace = null;
+  const cards = TRIPS.map(t => `
+    <li><button class="trip-card" data-trip="${t.id}" id="card-${t.id}">
+      <span class="stamp" aria-hidden="true">${esc(t.stamp)}</span>
+      <h3>${esc(t.title)}</h3>
+      <span class="meta">${esc(t.region)}・${esc(t.dates)}・${esc(t.length)}</span>
+      <p class="hook">${esc(t.hook)}</p>
+    </button></li>`).join("");
+  story.innerHTML = `${brandHTML()}
+    <p class="section-label">我們走過的地方・${TRIPS.length} 趟</p>
+    <ul class="trip-list">${cards}</ul>
+    <p class="empty-hint">下一趟旅行回來，這裡會多一張卡片。</p>
+    <footer class="foot">地圖為手繪示意，點地點下方的連結可開啟 Google 地圖。</footer>`;
+  story.querySelectorAll("[data-trip]").forEach(b => b.addEventListener("click", () => go(b.dataset.trip)));
+  drawTaiwan();
+  mapNote.textContent = "點地圖上的橘色圓點，或左邊的卡片，看那一趟的故事。";
+}
+
+function drawTaiwan() {
+  const { W, H, minLon, maxLat, k, s, counties } = TW;
+  const P = (lon, lat) => [(lon - minLon) * k * s, (maxLat - lat) * s];
+  const visited = new Set(TRIPS.map(t => t.county));
+  const hideLabel = new Set(["新竹市", "嘉義市"]);
+  const short = n => n.replace(/(縣|市)$/, "");
+  let waves = "";
+  for (let y = 18; y < H; y += 22) {
+    let d = `M -10 ${y}`;
+    for (let x = -10; x < W + 20; x += 20) d += ` q 5 -3 10 0 t 10 0`;
+    waves += `<path d="${d}"/>`;
+  }
+  const shapes = counties.map(c => `<path class="county${visited.has(c.name) ? " visited" : ""}" d="${c.d}"><title>${c.name}</title></path>`).join("");
+  const shadow = counties.map(c => c.d).join("");
+  const labels = counties.filter(c => !hideLabel.has(c.name) || visited.has(c.name)).map(c =>
+    `<text class="county-label${visited.has(c.name) ? " on" : ""}" x="${c.c[0]}" y="${c.c[1]}">${short(c.name)}</text>`).join("");
+  const pins = TRIPS.map(t => { const [x, y] = P(t.pin.lon, t.pin.lat);
+    return `<g class="pin" data-trip="${t.id}" tabindex="0" role="button" aria-label="${esc(t.title)}">
+      <circle class="halo" cx="${x}" cy="${y}" r="16"/>
+      <path class="drop" d="M ${x} ${y} c -3 -7 -10 -11 -10 -19 a 10 10 0 1 1 20 0 c 0 8 -7 12 -10 19 z"/>
+      <circle class="eye" cx="${x}" cy="${y - 19}" r="4"/>
+      <g class="flag" transform="translate(${x + 16} ${y - 34})"><rect rx="8" width="${(t.pin.label.length + 1) * 16 + 92}" height="26"/>
+        <text x="10" y="18">${esc(t.pin.label)}・${esc(t.dates.slice(0, 7))}</text></g></g>`; }).join("");
+  const total = counties.length, done = visited.size;
+  destroyMap();
+  mapbox.classList.add("tw");
+  mapbox.innerHTML = `<svg viewBox="-20 -10 ${W + 40} ${H + 20}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="台灣旅程地圖">
+    <defs><pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="6" height="6" class="hatch-bg"/><line x1="0" y1="0" x2="0" y2="6" class="hatch-line"/></pattern></defs>
+    <g class="waves">${waves}</g>
+    <path class="land-shadow" d="${shadow}" transform="translate(5 6)"/>
+    ${shapes}${labels}${pins}
+    <g class="cartouche" transform="translate(4 14)">
+      <text class="c-title" x="0" y="0">走過的縣市</text>
+      <text class="c-num" x="0" y="34">${done}<tspan class="c-of"> / ${total}</tspan></text>
+    </g>
+    <g class="compass" transform="translate(${W - 10} ${H - 50})">
+      <circle r="20" class="rose-ring"/><path class="rose" d="M0 -26 L6 0 L0 26 L-6 0 Z"/><path class="rose-n" d="M0 -26 L6 0 L-6 0 Z"/>
+      <text x="0" y="-32" text-anchor="middle">N</text></g>
+  </svg>`;
+  mapbox.querySelectorAll(".pin").forEach(p => {
+    p.addEventListener("click", () => go(p.dataset.trip));
+    p.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(p.dataset.trip); } });
+  });
+}
+
+/* ---------- 旅程詳情 ---------- */
+function placeCard(p, index) {
+  const kd = KINDS[p.kind];
+  const tags = (p.age ? `<span class="age">${esc(p.age)}</span>` : "") + (p.tags || []).map(t => `<span>${esc(t)}</span>`).join("");
+  return `<div class="place" data-place="${p.id}" id="place-${p.id}" tabindex="0" role="button" aria-label="${esc(p.name)}">
+      <span class="row"><span class="name">${esc(p.name)}</span><span class="kind" style="background:${kd.color}">${kd.label}</span>${p.day ? `<span class="day">${esc(p.day)}</span>` : ""}</span>
+      ${p.nick ? `<span class="nick">孩子叫它「${esc(p.nick)}」</span>` : ""}
+      <p>${esc(p.note)}</p>
+      ${p.tip ? `<span class="tip">提醒：${esc(p.tip)}</span>` : ""}
+      ${p.address || p.area ? `<span class="addr">${esc(p.address || p.area)}</span>` : ""}
+      ${tags ? `<span class="tags">${tags}</span>` : ""}
+      <a class="gmap" href="${gmap(p)}" target="_blank" rel="noopener">在 Google 地圖查看</a>
+    </div>`;
+}
+
+function renderTrip(t) {
+  activePlace = null;
+  const byId = Object.fromEntries(t.places.map(p => [p.id, p]));
+  const routeStops = t.route.stops.map((id, i) => {
+    const p = byId[id], kd = KINDS[p.kind];
+    return `<li class="stop"><span class="dot" style="background:${kd.color}">${i + 1}</span>${placeCard(p)}</li>`;
+  }).join("");
+  const dotOf = (kd, p) => `<span class="dot${p.wish ? " wish" : ""}" style="background:${p.wish ? "transparent" : kd.color}">${kd.glyph}</span>`;
+  const wishes = t.places.filter(p => p.wish).map(p => `<li>${dotOf(KINDS[p.kind], p)}${placeCard(p)}</li>`).join("");
+  const others = t.places.filter(p => !p.wish && !t.route.stops.includes(p.id)).map(p => {
+    const kd = KINDS[p.kind];
+    return `<li>${dotOf(kd, p)}${placeCard(p)}</li>`;
+  }).join("");
+  story.innerHTML = `
+    <button class="back" id="backBtn">← 所有旅程</button>
+    <section class="trip-head">
+      <p class="region">${esc(t.region)}</p>
+      <h2>${esc(t.title)}</h2>
+      <ul class="facts"><li>${esc(t.dates)}</li><li>${esc(t.length)}</li><li>交通：${t.transport.map(esc).join("＋")}</li></ul>
+      <p class="lead">${esc(t.lead)}</p>
+      ${t.blog ? `<a class="blog-link" href="${esc(t.blog.url)}" target="_blank" rel="noopener">完整遊記：${esc(t.blog.title)} →</a>` : ""}
+    </section>
+    <section class="route">
+      <h3>${esc(t.route.title)}</h3>
+      <p class="sub">${esc(t.route.sub)}</p>
+      ${t.route.how ? `<div class="howto"><h4>怎麼陪孩子走完 2 公里</h4><ul>${t.route.how.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : ""}
+      <ol class="stops">${routeStops}</ol>
+      ${t.route.tips ? `<div class="howto tips"><h4>出發前的小提醒</h4><ul>${t.route.tips.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : ""}
+    </section>
+    ${others ? `<section class="others"><h3>其他去過的地方</h3><ul class="other-list">${others}</ul></section>` : ""}
+    ${wishes ? `<section class="others"><h3>這次沒去成，下次想去</h3><ul class="other-list">${wishes}</ul></section>` : ""}
+    ${t.story ? `<section class="story-box"><h3>${esc(t.story.title)}</h3>${[].concat(t.story.text).map(x => `<p>${esc(x)}</p>`).join("")}${t.blog ? `<a class="blog-link" href="${esc(t.blog.url)}" target="_blank" rel="noopener">在部落格閱讀完整遊記 →</a>` : ""}</section>` : ""}
+    <footer class="foot">點地點下方的連結，可在 Google 地圖查看路線與營業資訊。</footer>`;
+  document.getElementById("backBtn").addEventListener("click", () => go(""));
+  story.querySelectorAll(".place").forEach(b => b.addEventListener("click", e => {
+    if (e.target.closest("a")) return;
+    setActive(b.dataset.place, false);
+  }));
+  story.querySelectorAll(".place").forEach(b => b.addEventListener("keydown", e => {
+    if ((e.key === "Enter" || e.key === " ") && !e.target.closest("a")) { e.preventDefault(); setActive(b.dataset.place, false); }
+  }));
+  drawLocal(t);
+  mapNote.textContent = "橘色虛線是走路的順序。點左邊的地點，地圖會移過去；點地圖上的圖釘，會跳到那段介紹。";
+  window.scrollTo(0, 0);
+}
+
+/* ---------- 向量地圖（Apple 地圖風格） ---------- */
+const MAP_THEMES = {
+  light: {
+    bg: "#f6f4f0", urban: "#efece7", water: "#a9d3f4", waterLine: "#8cc2ec", park: "#cbe7b8", wood: "#bfe0a8",
+    grass: "#d6edc6", sand: "#f2ead2", school: "#f3e9df", hospital: "#f7e3e3",
+    building: "#e7e3dd", buildingLine: "#dcd6cf",
+    minor: "#ffffff", minorCase: "#e2ddd6", major: "#fdf0c4", majorCase: "#ecd38a", motorway: "#fbd88a", motorwayCase: "#e2b25a",
+    rail: "#c9c4bd", path: "#d9d3ca",
+    label: "#5f5f63", labelHalo: "#ffffff", place: "#2f2f33", parkLabel: "#3f8a3a", waterLabel: "#3c7fb8", poiLabel: "#7a7a80"
+  },
+  dark: {
+    bg: "#232427", urban: "#26272b", water: "#1c3a52", waterLine: "#24496a", park: "#24402a", wood: "#21402a",
+    grass: "#26412c", sand: "#3a372c", school: "#2c2a2e", hospital: "#352a2c",
+    building: "#2f3034", buildingLine: "#393a3f",
+    minor: "#3b3d42", minorCase: "#2b2c30", major: "#5a5236", majorCase: "#3f3a29", motorway: "#76643a", motorwayCase: "#4a3f26",
+    rail: "#4a4b50", path: "#3a3b40",
+    label: "#c4c4c8", labelHalo: "#232427", place: "#e6e6ea", parkLabel: "#8ccf88", waterLabel: "#7fb4e0", poiLabel: "#a2a2a8"
+  }
+};
+const NAME = ["coalesce", ["get", "name:zh-Hant"], ["get", "name"]];
+// 地圖資料：每個地區一個 map/<key>.json（同地區的旅程共用），字型 map/fonts.json 全站共用。
+// 只有點進某趟旅程時才下載該地區的資料，下載過的會留在記憶體裡重複使用。
+const MAPCACHE = {};
+let protocolReady = false;
+const loadPack = name => MAPCACHE[name] || (MAPCACHE[name] = fetch("map/" + name + ".json")
+  .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+  .catch(err => { delete MAPCACHE[name]; throw err; }));
+async function gunzip(b64) {
+  const bin = Uint8Array.from(atob(b64), ch => ch.charCodeAt(0));
+  return new Response(new Blob([bin]).stream().pipeThrough(new DecompressionStream("gzip"))).arrayBuffer();
+}
+function ensureProtocol() {
+  if (protocolReady || !window.maplibregl) return;
+  maplibregl.addProtocol("trip", async params => {
+    const path = params.url.replace("trip://", "");
+    const slash = path.indexOf("/");
+    const pack = path.slice(0, slash), key = path.slice(slash + 1);
+    const d = await loadPack(pack === "font" ? "fonts" : pack);
+    if (d[key]) return { data: await gunzip(d[key]) };
+    if (pack === "font") return { data: new ArrayBuffer(0) };
+    throw new Error("tile not packed");  // 沒打包的細節圖磚：讓地圖沿用較粗的上一層
+  });
+  protocolReady = true;
+}
+
+function appleStyle(c, pack) {
+  const roads = (filter, color, caseColor, w) => ([
+    { id: "case-" + w.id, type: "line", source: "omt", "source-layer": "transportation", filter,
+      layout: { "line-cap": "round", "line-join": "round" },
+      paint: { "line-color": caseColor, "line-width": ["interpolate", ["exponential", 1.6], ["zoom"], 12, w.a + 1, 18, w.b + 4] } },
+    { id: "fill-" + w.id, type: "line", source: "omt", "source-layer": "transportation", filter,
+      layout: { "line-cap": "round", "line-join": "round" },
+      paint: { "line-color": color, "line-width": ["interpolate", ["exponential", 1.6], ["zoom"], 12, w.a, 18, w.b] } }
+  ]);
+  const minorF = ["all", ["==", ["geometry-type"], "LineString"], ["in", ["get", "class"], ["literal", ["minor", "service", "tertiary"]]]];
+  const majorF = ["all", ["==", ["geometry-type"], "LineString"], ["in", ["get", "class"], ["literal", ["primary", "secondary", "trunk"]]]];
+  const motorF = ["all", ["==", ["geometry-type"], "LineString"], ["==", ["get", "class"], "motorway"]];
+  return {
+    version: 8,
+    glyphs: "trip://font/{fontstack}/{range}",
+    sources: { omt: { type: "vector", tiles: ["trip://" + pack + "/{z}/{x}/{y}"], minzoom: 12, maxzoom: 14,
+      attribution: '<a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> © <a href="https://www.openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a> 資料來自 <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>' } },
+    layers: [
+      { id: "bg", type: "background", paint: { "background-color": c.bg } },
+      { id: "landuse-urban", type: "fill", source: "omt", "source-layer": "landuse",
+        filter: ["in", ["get", "class"], ["literal", ["residential", "commercial", "retail", "industrial", "neighbourhood"]]],
+        paint: { "fill-color": c.urban } },
+      { id: "landuse-school", type: "fill", source: "omt", "source-layer": "landuse",
+        filter: ["in", ["get", "class"], ["literal", ["school", "university", "college", "kindergarten"]]], paint: { "fill-color": c.school } },
+      { id: "landuse-hospital", type: "fill", source: "omt", "source-layer": "landuse", filter: ["==", ["get", "class"], "hospital"], paint: { "fill-color": c.hospital } },
+      { id: "landcover-grass", type: "fill", source: "omt", "source-layer": "landcover",
+        filter: ["in", ["get", "class"], ["literal", ["grass", "farmland", "wetland"]]], paint: { "fill-color": c.grass } },
+      { id: "landcover-wood", type: "fill", source: "omt", "source-layer": "landcover", filter: ["==", ["get", "class"], "wood"], paint: { "fill-color": c.wood } },
+      { id: "landcover-sand", type: "fill", source: "omt", "source-layer": "landcover", filter: ["==", ["get", "class"], "sand"], paint: { "fill-color": c.sand } },
+      { id: "park", type: "fill", source: "omt", "source-layer": "park", paint: { "fill-color": c.park } },
+      { id: "landuse-park", type: "fill", source: "omt", "source-layer": "landuse",
+        filter: ["in", ["get", "class"], ["literal", ["park", "playground", "pitch", "stadium", "garden", "zoo"]]], paint: { "fill-color": c.park } },
+      { id: "water", type: "fill", source: "omt", "source-layer": "water", paint: { "fill-color": c.water } },
+      { id: "waterway", type: "line", source: "omt", "source-layer": "waterway",
+        paint: { "line-color": c.water, "line-width": ["interpolate", ["linear"], ["zoom"], 12, 1, 17, 4] } },
+      { id: "building", type: "fill", source: "omt", "source-layer": "building", minzoom: 14,
+        paint: { "fill-color": c.building, "fill-outline-color": c.buildingLine, "fill-opacity": ["interpolate", ["linear"], ["zoom"], 14, 0, 15, 1] } },
+      { id: "path", type: "line", source: "omt", "source-layer": "transportation", minzoom: 15,
+        filter: ["in", ["get", "class"], ["literal", ["path", "track"]]],
+        paint: { "line-color": c.path, "line-width": 1.2, "line-dasharray": [2, 2] } },
+      { id: "rail", type: "line", source: "omt", "source-layer": "transportation",
+        filter: ["in", ["get", "class"], ["literal", ["rail", "transit"]]],
+        paint: { "line-color": c.rail, "line-width": ["interpolate", ["linear"], ["zoom"], 12, 1, 17, 3] } },
+      ...roads(minorF, c.minor, c.minorCase, { id: "minor", a: 0.5, b: 11 }),
+      ...roads(majorF, c.major, c.majorCase, { id: "major", a: 1.2, b: 16 }),
+      ...roads(motorF, c.motorway, c.motorwayCase, { id: "motor", a: 1.6, b: 18 }),
+      { id: "water-name", type: "symbol", source: "omt", "source-layer": "water_name",
+        layout: { "text-field": NAME, "text-font": ["NotoSansRegular"], "text-size": 12 },
+        paint: { "text-color": c.waterLabel, "text-halo-color": c.labelHalo, "text-halo-width": 1.2 } },
+      { id: "road-name", type: "symbol", source: "omt", "source-layer": "transportation_name", minzoom: 14,
+        filter: ["!", ["in", ["get", "class"], ["literal", ["service", "path", "track"]]]],
+        layout: { "symbol-placement": "line", "text-field": NAME, "text-font": ["NotoSansRegular"],
+          "text-size": ["interpolate", ["linear"], ["zoom"], 14, 10, 18, 13], "text-max-angle": 30, "symbol-spacing": 280 },
+        paint: { "text-color": c.label, "text-halo-color": c.labelHalo, "text-halo-width": 1.6 } },
+      { id: "poi", type: "symbol", source: "omt", "source-layer": "poi", minzoom: 15,
+        filter: ["in", ["get", "class"], ["literal", ["park", "school", "college", "railway", "attraction", "zoo", "library", "town_hall", "stadium"]]],
+        layout: { "text-field": NAME, "text-font": ["NotoSansRegular"], "text-size": 11, "text-max-width": 8, "text-padding": 6 },
+        paint: { "text-color": ["match", ["get", "class"], "park", c.parkLabel, c.poiLabel], "text-halo-color": c.labelHalo, "text-halo-width": 1.4 } },
+      { id: "place-small", type: "symbol", source: "omt", "source-layer": "place", minzoom: 13,
+        filter: ["in", ["get", "class"], ["literal", ["village", "hamlet", "suburb", "neighbourhood", "quarter"]]],
+        layout: { "text-field": NAME, "text-font": ["NotoSansRegular"], "text-size": 11, "text-letter-spacing": 0.15 },
+        paint: { "text-color": c.poiLabel, "text-halo-color": c.labelHalo, "text-halo-width": 1.4, "text-opacity": 0.8 } },
+      { id: "place-town", type: "symbol", source: "omt", "source-layer": "place",
+        filter: ["in", ["get", "class"], ["literal", ["city", "town"]]],
+        layout: { "text-field": NAME, "text-font": ["NotoSansBold"], "text-size": ["interpolate", ["linear"], ["zoom"], 10, 13, 15, 17] },
+        paint: { "text-color": c.place, "text-halo-color": c.labelHalo, "text-halo-width": 1.8 } }
+    ]
+  };
+}
+
+let gmap2 = null, gmarkers = {}, currentTrip = null;
+function isDark() {
+  const r = document.documentElement.getAttribute("data-theme");
+  return r ? r === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+}
+function destroyMap() { if (gmap2) { gmap2.remove(); gmap2 = null; gmarkers = {}; } }
+
+function addRoute(t) {
+  const byId = Object.fromEntries(t.places.map(p => [p.id, p]));
+  const coords = t.route.stops.map(id => [byId[id].lon, byId[id].lat]);
+  if (gmap2.getSource("route")) return;
+  gmap2.addSource("route", { type: "geojson", data: { type: "Feature", geometry: { type: "LineString", coordinates: coords } } });
+  gmap2.addLayer({ id: "route-glow", type: "line", source: "route", layout: { "line-cap": "round", "line-join": "round" },
+    paint: { "line-color": isDark() ? "#f0a944" : "#e8962a", "line-width": 10, "line-opacity": 0.18 } });
+  gmap2.addLayer({ id: "route", type: "line", source: "route", layout: { "line-cap": "round", "line-join": "round" },
+    paint: { "line-color": isDark() ? "#f0a944" : "#e8962a", "line-width": 4, "line-dasharray": [0.6, 2.2] } });
+}
+
+function drawLocal(t) {
+  mapbox.classList.remove("tw");
+  destroyMap();
+  mapbox.innerHTML = "";
+  currentTrip = t;
+  if (!window.maplibregl) { mapbox.innerHTML = '<p style="padding:16px">地圖載入失敗，請重新整理頁面。</p>'; return; }
+  ensureProtocol();
+  const [[s, w], [n, e]] = t.map.bounds;
+  gmap2 = new maplibregl.Map({
+    container: mapbox, style: appleStyle(MAP_THEMES[isDark() ? "dark" : "light"], t.mapData),
+    bounds: [[w, s], [e, n]], maxBounds: [[w - 0.03, s - 0.03], [e + 0.03, n + 0.03]],
+    minZoom: 12, maxZoom: 18.5, attributionControl: { compact: true },
+    localIdeographFontFamily: '"PingFang TC", "Heiti TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif',
+    dragRotate: false, pitchWithRotate: false
+  });
+  gmap2.touchZoomRotate.disableRotation();
+  gmap2.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+  gmap2.on("error", e => { if (!/not packed/.test(e && e.error && e.error.message)) console.warn(e.error || e); });
+  gmap2.on("load", () => addRoute(t));
+  gmap2.on("style.load", () => addRoute(t));
+
+  t.places.filter(p => !p.offMap).forEach(p => {
+    const kd = KINDS[p.kind], idx = t.route.stops.indexOf(p.id);
+    const el = document.createElement("div");
+    el.className = "lmk" + (p.labelLeft ? " left" : "") + (p.wish ? " wish" : ""); el.dataset.place = p.id; el.tabIndex = 0; el.setAttribute("role", "button"); el.setAttribute("aria-label", p.name);
+    el.innerHTML = `<div class="b" style="background:${kd.color}">${idx >= 0 ? idx + 1 : kd.glyph}</div><div class="l">${esc(p.name.replace(/ GUNGUN FONDUE/, ""))}</div>`;
+    el.addEventListener("click", ev => { ev.stopPropagation(); setActive(p.id, true); });
+    el.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); setActive(p.id, true); } });
+    gmarkers[p.id] = new maplibregl.Marker({ element: el, anchor: "center" }).setLngLat([p.lon, p.lat]).addTo(gmap2);
+  });
+  const narrow = matchMedia("(max-width: 820px)").matches;
+  const focus = t.places.filter(p => !p.offRoute && !p.offMap && !p.wish);
+  const b = new maplibregl.LngLatBounds();
+  focus.forEach(p => b.extend([p.lon, p.lat]));
+  gmap2.fitBounds(b, { padding: narrow ? { top: 44, bottom: 52, left: 40, right: 56 } : { top: 50, bottom: 50, left: 40, right: 120 }, duration: 0 });
+  // 手機上縮小時只顯示編號圖釘，放大或點選後才顯示地名，避免標籤擠在一起
+  const syncLabels = () => mapbox.classList.toggle("compact-labels", narrow && gmap2.getZoom() < 15.2);
+  gmap2.on("zoom", syncLabels); syncLabels();
+  gmap2.once("load", () => { const a = mapbox.querySelector(".maplibregl-ctrl-attrib"); if (a) a.classList.remove("maplibregl-compact-show"); });
+}
+
+function retheme() {
+  if (!gmap2) return;
+  gmap2.setStyle(appleStyle(MAP_THEMES[isDark() ? "dark" : "light"], currentTrip.mapData));
+}
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", retheme);
+new MutationObserver(retheme).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+function haversine(a, b) {
+  const R = 6371, r = Math.PI / 180;
+  const dLat = (b.lat - a.lat) * r, dLon = (b.lon - a.lon) * r;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * r) * Math.cos(b.lat * r) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+function setActive(id, scroll) {
+  activePlace = id;
+  document.querySelectorAll(".place").forEach(el => el.classList.toggle("active", el.dataset.place === id));
+  document.querySelectorAll(".lmk").forEach(el => el.classList.toggle("active", el.dataset.place === id));
+  if (gmap2 && gmarkers[id]) {
+    // 手機上地圖在頁面最上方：從清單點地點時，先捲回地圖讓人看到移動
+    if (!scroll && matchMedia("(max-width: 820px)").matches) {
+      window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    }
+    const ll = gmarkers[id].getLngLat();
+    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    gmap2.easeTo({ center: ll, zoom: Math.max(gmap2.getZoom(), 15.5), duration: reduce ? 0 : 700 });
+    Object.entries(gmarkers).forEach(([k, m]) => { m.getElement().style.zIndex = k === id ? 5 : 1; });
+  }
+  if (scroll) {
+    const el = document.getElementById("place-" + id);
+    if (el) el.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "center" });
+  }
+}
+
+/* ---------- 路由（#trip-xxx） ---------- */
+function go(id) { location.hash = id ? "trip-" + id : ""; if (!id) route(); }
+function route() {
+  const h = location.hash.replace(/^#/, "");
+  const t = h.startsWith("trip-") ? TRIPS.find(x => x.id === h.slice(5)) : null;
+  if (t) renderTrip(t); else renderOverview();
+}
+window.addEventListener("hashchange", route);
+route();
+</script>
+
+</body>
+</html>
