@@ -84,6 +84,7 @@ body {
   border: 1px solid var(--line); position: relative; overflow: hidden;
 }
 .mapbox svg { width: 100%; height: 100%; display: block; }
+.mapbox.tw svg { overflow: visible; }
 .map-note { font-size: var(--step--1); color: var(--ink-soft); }
 
 header.brand { display: flex; flex-direction: column; gap: 6px; }
@@ -423,7 +424,7 @@ function renderOverview() {
     <p class="section-label">我們走過的地方・${TRIPS.length} 趟</p>
     <ul class="trip-list">${cards}</ul>
     <p class="empty-hint">下一趟旅行回來，這裡會多一張卡片。</p>
-    <footer class="foot">地圖為手繪示意，點地點下方的連結可開啟 Google 地圖。</footer>`;
+    <footer class="foot">點卡片進入旅程，可以看到步行路線地圖和沿途的小故事。</footer>`;
   story.querySelectorAll("[data-trip]").forEach(b => b.addEventListener("click", () => go(b.dataset.trip)));
   drawTaiwan();
   mapNote.textContent = "點地圖上的橘色圓點，或左邊的卡片，看那一趟的故事。";
@@ -437,9 +438,11 @@ function drawTaiwan() {
   const hideLabel = new Set(["新竹市", "嘉義市"]);
   const short = n => n.replace(/(縣|市)$/, "");
   let waves = "";
-  for (let y = 18; y < H; y += 22) {
-    let d = `M -10 ${y}`;
-    for (let x = -10; x < W + 20; x += 20) d += ` q 5 -3 10 0 t 10 0`;
+  // 波浪畫得比地圖範圍大很多，搭配 svg 的 overflow: visible，讓海面鋪滿整個地圖框
+  const x0 = -W * 3, x1 = W * 4;
+  for (let y = 18 - 22 * Math.ceil(H * 2 / 22); y < H * 3; y += 22) {
+    let d = `M ${x0} ${y}`;
+    for (let x = x0; x < x1; x += 20) d += ` q 5 -3 10 0 t 10 0`;
     waves += `<path d="${d}"/>`;
   }
   const shapes = counties.map(c => `<path class="county${visited.has(c.name) ? " visited" : ""}" d="${c.d}"><title>${c.name}</title></path>`).join("");
