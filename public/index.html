@@ -10,6 +10,8 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preconnect" href="https://tiles.openfreemap.org" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <style>
 /* Layout: 左側是故事欄（旅程清單／旅程詳情），右側是一張手繪感地圖；手機上地圖在上、故事在下。 */
@@ -213,6 +215,7 @@ header.brand { display: flex; flex-direction: column; gap: 6px; }
   .pin .flag text { font-size: 16px; }
   .cartouche .c-title { font-size: 15px; }
 }
+.map-loading { margin: 0; padding: 16px; color: var(--ink-soft); font-size: var(--step--1); }
 footer.foot { margin-top: auto; font-size: 0.75rem; color: var(--ink-soft); }
 
 /* SVG map styling */
@@ -300,7 +303,6 @@ footer.foot { margin-top: auto; font-size: 0.75rem; color: var(--ink-soft); }
   </aside>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <script>
 const KINDS = {
   stay: { label: "住宿", glyph: "住", color: "var(--stay)" },
@@ -319,7 +321,6 @@ const TRIPS = [
     region: "新竹・竹北",
     stamp: "竹",
     county: "新竹縣",
-    mapData: "hsinchu-zhubei",
     map: { minZoom: 12, maxZoom: 17, bounds: [[24.790, 120.965], [24.840, 121.055]] },
     pin: { lon: 121.03, lat: 24.82, label: "新竹" },
     dates: "2026/10/9 – 10/11",
@@ -426,6 +427,7 @@ function renderOverview() {
   story.querySelectorAll("[data-trip]").forEach(b => b.addEventListener("click", () => go(b.dataset.trip)));
   drawTaiwan();
   mapNote.textContent = "點地圖上的橘色圓點，或左邊的卡片，看那一趟的故事。";
+  whenIdle(() => loadMapLib().catch(() => {}));
 }
 
 function drawTaiwan() {
@@ -555,32 +557,23 @@ const MAP_THEMES = {
   }
 };
 const NAME = ["coalesce", ["get", "name:zh-Hant"], ["get", "name"]];
-// 地圖資料：每個地區一個 map/<key>.json（同地區的旅程共用），字型 map/fonts.json 全站共用。
-// 只有點進某趟旅程時才下載該地區的資料，下載過的會留在記憶體裡重複使用。
-const MAPCACHE = {};
-let protocolReady = false;
-const loadPack = name => MAPCACHE[name] || (MAPCACHE[name] = fetch("map/" + name + ".json")
-  .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
-  .catch(err => { delete MAPCACHE[name]; throw err; }));
-async function gunzip(b64) {
-  const bin = Uint8Array.from(atob(b64), ch => ch.charCodeAt(0));
-  return new Response(new Blob([bin]).stream().pipeThrough(new DecompressionStream("gzip"))).arrayBuffer();
+// 地圖：向量圖磚與字型即時讀取 OpenFreeMap，只下載畫面上看得到的部分。
+// 地圖程式庫在首頁顯示後於背景預先載入，點進旅程時通常已經準備好。
+const MAPLIB_URL = "https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js";
+let mapLibPromise = null;
+function loadMapLib() {
+  if (window.maplibregl) return Promise.resolve();
+  return mapLibPromise || (mapLibPromise = new Promise((resolve, reject) => {
+    const sc = document.createElement("script");
+    sc.src = MAPLIB_URL; sc.async = true;
+    sc.onload = resolve;
+    sc.onerror = () => { mapLibPromise = null; reject(new Error("maplibre load failed")); };
+    document.head.appendChild(sc);
+  }));
 }
-function ensureProtocol() {
-  if (protocolReady || !window.maplibregl) return;
-  maplibregl.addProtocol("trip", async params => {
-    const path = params.url.replace("trip://", "");
-    const slash = path.indexOf("/");
-    const pack = path.slice(0, slash), key = path.slice(slash + 1);
-    const d = await loadPack(pack === "font" ? "fonts" : pack);
-    if (d[key]) return { data: await gunzip(d[key]) };
-    if (pack === "font") return { data: new ArrayBuffer(0) };
-    throw new Error("tile not packed");  // 沒打包的細節圖磚：讓地圖沿用較粗的上一層
-  });
-  protocolReady = true;
-}
+const whenIdle = fn => (window.requestIdleCallback ? requestIdleCallback(fn, { timeout: 2000 }) : setTimeout(fn, 800));
 
-function appleStyle(c, pack) {
+function appleStyle(c) {
   const roads = (filter, color, caseColor, w) => ([
     { id: "case-" + w.id, type: "line", source: "omt", "source-layer": "transportation", filter,
       layout: { "line-cap": "round", "line-join": "round" },
@@ -594,8 +587,8 @@ function appleStyle(c, pack) {
   const motorF = ["all", ["==", ["geometry-type"], "LineString"], ["==", ["get", "class"], "motorway"]];
   return {
     version: 8,
-    glyphs: "trip://font/{fontstack}/{range}",
-    sources: { omt: { type: "vector", tiles: ["trip://" + pack + "/{z}/{x}/{y}"], minzoom: 12, maxzoom: 14,
+    glyphs: "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
+    sources: { omt: { type: "vector", url: "https://tiles.openfreemap.org/planet",
       attribution: '<a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> © <a href="https://www.openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a> 資料來自 <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>' } },
     layers: [
       { id: "bg", type: "background", paint: { "background-color": c.bg } },
@@ -627,24 +620,24 @@ function appleStyle(c, pack) {
       ...roads(majorF, c.major, c.majorCase, { id: "major", a: 1.2, b: 16 }),
       ...roads(motorF, c.motorway, c.motorwayCase, { id: "motor", a: 1.6, b: 18 }),
       { id: "water-name", type: "symbol", source: "omt", "source-layer": "water_name",
-        layout: { "text-field": NAME, "text-font": ["NotoSansRegular"], "text-size": 12 },
+        layout: { "text-field": NAME, "text-font": ["Noto Sans Regular"], "text-size": 12 },
         paint: { "text-color": c.waterLabel, "text-halo-color": c.labelHalo, "text-halo-width": 1.2 } },
       { id: "road-name", type: "symbol", source: "omt", "source-layer": "transportation_name", minzoom: 14,
         filter: ["!", ["in", ["get", "class"], ["literal", ["service", "path", "track"]]]],
-        layout: { "symbol-placement": "line", "text-field": NAME, "text-font": ["NotoSansRegular"],
+        layout: { "symbol-placement": "line", "text-field": NAME, "text-font": ["Noto Sans Regular"],
           "text-size": ["interpolate", ["linear"], ["zoom"], 14, 10, 18, 13], "text-max-angle": 30, "symbol-spacing": 280 },
         paint: { "text-color": c.label, "text-halo-color": c.labelHalo, "text-halo-width": 1.6 } },
       { id: "poi", type: "symbol", source: "omt", "source-layer": "poi", minzoom: 15,
         filter: ["in", ["get", "class"], ["literal", ["park", "school", "college", "railway", "attraction", "zoo", "library", "town_hall", "stadium"]]],
-        layout: { "text-field": NAME, "text-font": ["NotoSansRegular"], "text-size": 11, "text-max-width": 8, "text-padding": 6 },
+        layout: { "text-field": NAME, "text-font": ["Noto Sans Regular"], "text-size": 11, "text-max-width": 8, "text-padding": 6 },
         paint: { "text-color": ["match", ["get", "class"], "park", c.parkLabel, c.poiLabel], "text-halo-color": c.labelHalo, "text-halo-width": 1.4 } },
       { id: "place-small", type: "symbol", source: "omt", "source-layer": "place", minzoom: 13,
         filter: ["in", ["get", "class"], ["literal", ["village", "hamlet", "suburb", "neighbourhood", "quarter"]]],
-        layout: { "text-field": NAME, "text-font": ["NotoSansRegular"], "text-size": 11, "text-letter-spacing": 0.15 },
+        layout: { "text-field": NAME, "text-font": ["Noto Sans Regular"], "text-size": 11, "text-letter-spacing": 0.15 },
         paint: { "text-color": c.poiLabel, "text-halo-color": c.labelHalo, "text-halo-width": 1.4, "text-opacity": 0.8 } },
       { id: "place-town", type: "symbol", source: "omt", "source-layer": "place",
         filter: ["in", ["get", "class"], ["literal", ["city", "town"]]],
-        layout: { "text-field": NAME, "text-font": ["NotoSansBold"], "text-size": ["interpolate", ["linear"], ["zoom"], 10, 13, 15, 17] },
+        layout: { "text-field": NAME, "text-font": ["Noto Sans Bold"], "text-size": ["interpolate", ["linear"], ["zoom"], 10, 13, 15, 17] },
         paint: { "text-color": c.place, "text-halo-color": c.labelHalo, "text-halo-width": 1.8 } }
     ]
   };
@@ -668,24 +661,25 @@ function addRoute(t) {
     paint: { "line-color": isDark() ? "#f0a944" : "#e8962a", "line-width": 4, "line-dasharray": [0.6, 2.2] } });
 }
 
-function drawLocal(t) {
+async function drawLocal(t) {
   mapbox.classList.remove("tw");
   destroyMap();
-  mapbox.innerHTML = "";
   currentTrip = t;
-  if (!window.maplibregl) { mapbox.innerHTML = '<p style="padding:16px">地圖載入失敗，請重新整理頁面。</p>'; return; }
-  ensureProtocol();
+  mapbox.innerHTML = '<p class="map-loading">地圖載入中…</p>';
+  try { await loadMapLib(); }
+  catch (err) { mapbox.innerHTML = '<p class="map-loading">地圖載入失敗，請檢查網路後重新整理頁面。</p>'; return; }
+  if (currentTrip !== t || location.hash !== "#trip-" + t.id) return;  // 載入期間已離開這一頁
+  mapbox.innerHTML = "";
   const [[s, w], [n, e]] = t.map.bounds;
   gmap2 = new maplibregl.Map({
-    container: mapbox, style: appleStyle(MAP_THEMES[isDark() ? "dark" : "light"], t.mapData),
-    bounds: [[w, s], [e, n]], maxBounds: [[w - 0.03, s - 0.03], [e + 0.03, n + 0.03]],
-    minZoom: 12, maxZoom: 18.5, attributionControl: { compact: true },
+    container: mapbox, style: appleStyle(MAP_THEMES[isDark() ? "dark" : "light"]),
+    bounds: [[w, s], [e, n]], maxBounds: [[117.5, 21.0], [123.5, 26.6]],
+    minZoom: 6, maxZoom: 18.5, attributionControl: { compact: true },
     localIdeographFontFamily: '"PingFang TC", "Heiti TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif',
     dragRotate: false, pitchWithRotate: false
   });
   gmap2.touchZoomRotate.disableRotation();
   gmap2.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
-  gmap2.on("error", e => { if (!/not packed/.test(e && e.error && e.error.message)) console.warn(e.error || e); });
   gmap2.on("load", () => addRoute(t));
   gmap2.on("style.load", () => addRoute(t));
 
@@ -711,7 +705,7 @@ function drawLocal(t) {
 
 function retheme() {
   if (!gmap2) return;
-  gmap2.setStyle(appleStyle(MAP_THEMES[isDark() ? "dark" : "light"], currentTrip.mapData));
+  gmap2.setStyle(appleStyle(MAP_THEMES[isDark() ? "dark" : "light"]));
 }
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", retheme);
 new MutationObserver(retheme).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
