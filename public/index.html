@@ -43,6 +43,9 @@
   --mango-soft: #fbe3bd;
   --tile-filter: none;
   --whale: #7ea6c2;
+  --dolphin: #f7dfd8;
+  --dolphin-line: #c9938c;
+  --dolphin-belly: #f2c3bb;
   --font-display: "LXGW WenKai TC", "Kaiti TC", "BiauKai", "Noto Serif TC", serif;
   --font-body: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
   --step--1: 0.8125rem;
@@ -55,13 +58,13 @@
   :root:not([data-theme="light"]) {
     --paper: #171c17; --paper-2: #1f261f; --ink: #e8ecdf; --ink-soft: #a6b09c; --line: #364032;
     --mango: #f0a944; --mango-ink: #f6c27a; --leaf: #7bbf88; --stay: #79a8d6; --food: #ec8a6f;
-    --play: #b892dd; --park: #7bbf88; --move: #9aa391; --card: #1c221c; --sea: #142226; --sea-line: #23383c; --land: #2a3227; --land-hover: #333d2f; --mango-soft: #4a3415; --tile-filter: invert(1) hue-rotate(180deg) brightness(.82) contrast(.92) saturate(.7); --whale: #5b88a8; color-scheme: dark;
+    --play: #b892dd; --park: #7bbf88; --move: #9aa391; --card: #1c221c; --sea: #142226; --sea-line: #23383c; --land: #2a3227; --land-hover: #333d2f; --mango-soft: #4a3415; --tile-filter: invert(1) hue-rotate(180deg) brightness(.82) contrast(.92) saturate(.7); --whale: #5b88a8; --dolphin: #e9c8c1; --dolphin-line: #a9776f; --dolphin-belly: #d9a49b; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --paper: #171c17; --paper-2: #1f261f; --ink: #e8ecdf; --ink-soft: #a6b09c; --line: #364032;
   --mango: #f0a944; --mango-ink: #f6c27a; --leaf: #7bbf88; --stay: #79a8d6; --food: #ec8a6f;
-  --play: #b892dd; --park: #7bbf88; --move: #9aa391; --card: #1c221c; --sea: #142226; --sea-line: #23383c; --land: #2a3227; --land-hover: #333d2f; --mango-soft: #4a3415; --tile-filter: invert(1) hue-rotate(180deg) brightness(.82) contrast(.92) saturate(.7); --whale: #5b88a8; color-scheme: dark;
+  --play: #b892dd; --park: #7bbf88; --move: #9aa391; --card: #1c221c; --sea: #142226; --sea-line: #23383c; --land: #2a3227; --land-hover: #333d2f; --mango-soft: #4a3415; --tile-filter: invert(1) hue-rotate(180deg) brightness(.82) contrast(.92) saturate(.7); --whale: #5b88a8; --dolphin: #e9c8c1; --dolphin-line: #a9776f; --dolphin-belly: #d9a49b; color-scheme: dark;
 }
 html, body { height: 100%; }
 body {
@@ -245,11 +248,15 @@ header.brand { display: flex; flex-direction: column; gap: 6px; }
 .waves .w-b { animation: drift-r 12s linear infinite; }
 @keyframes drift-l { to { transform: translateX(-20px); } }
 @keyframes drift-r { from { transform: translateX(-20px); } to { transform: translateX(0); } }
-.boat { animation: bob 3.2s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }
-.boat .hull { fill: var(--ink-soft); }
-.boat .mast { stroke: var(--ink-soft); stroke-width: 1.2; }
-.boat .sail { fill: var(--card); stroke: var(--ink-soft); stroke-width: 1; stroke-linejoin: round; }
-@keyframes bob { 0%, 100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-2.5px) rotate(4deg); } }
+.dolphin { opacity: 0; }
+.dolphin .d-body, .dolphin .d-fin, .dolphin .d-fluke { fill: var(--dolphin); stroke: var(--dolphin-line); stroke-width: .7; stroke-linejoin: round; }
+.dolphin .d-belly { fill: var(--dolphin-belly); }
+.dolphin .d-eye { fill: var(--ink); }
+.d-shadow { opacity: 0; }
+.d-shadow ellipse { fill: var(--sea-line); }
+.d-shadow path { fill: none; stroke: var(--sea-line); stroke-width: 1.2; stroke-linecap: round; }
+.d-ripple { fill: none; stroke: var(--card); stroke-width: 1.2; opacity: 0; }
+.d-drops circle { fill: var(--card); opacity: 0; }
 .whale .body { fill: var(--whale); }
 .whale .eye-w { fill: var(--card); }
 .whale .spout { stroke: var(--whale); stroke-width: 1.4; stroke-linecap: round; fill: none; opacity: 0; animation: spout 4.5s ease-out infinite; }
@@ -277,7 +284,7 @@ header.brand { display: flex; flex-direction: column; gap: 6px; }
 @keyframes pop { from { transform: scale(0); } }
 
 @media (prefers-reduced-motion: reduce) {
-  .waves path, .boat, .whale, .whale .spout, .pin .drop, .pin .eye, .pin .flag-in, .pin circle.halo, .lmk .b, .lmk .l { animation: none !important; }
+  .waves path, .whale, .whale .spout, .pin .drop, .pin .eye, .pin .flag-in, .pin circle.halo, .lmk .b, .lmk .l { animation: none !important; }
   .whale .spout { opacity: 0; }
   .pin .flag-in, .pin .flag rect { transition: none; }
 }
@@ -779,13 +786,22 @@ function drawTaiwan() {
         <text x="10" y="18">${esc(t.pin.label)}・${t.start.slice(0, 4)}/${+t.start.slice(5, 7)}</text></g></g></g>`;
   }).join("");
   const total = counties.length, done = visited.size;
-  const [bx, by] = P(120.08, 24.45), [wx, wy] = P(121.93, 23.35);
+  const [wx, wy] = P(121.93, 23.35);
+  // 台灣白海豚：沿西部沿海由北往南游（苗栗外海 → 彰化、雲林外海）。四個點：起點、第一跳、第二跳、終點，由 JS 逐格驅動
+  const dolphinPath = [[120.52, 24.66], [120.36, 24.40], [120.20, 24.08], [119.98, 23.74]].map(([lo, la]) => P(lo, la));
   const critters = `
-    <g transform="translate(${bx} ${by})"><g class="boat">
-      <path class="hull" d="M-10 0 h20 l-4 5 h-12 z"/>
-      <path class="mast" d="M0 0 V-16"/>
-      <path class="sail" d="M1.5 -15 L10 -2 H1.5 z"/><path class="sail" d="M-1.5 -12 L-8 -2 H-1.5 z"/>
-    </g></g>
+    <g class="dolphin-layer" data-path='${JSON.stringify(dolphinPath.map(([x, y]) => [+x.toFixed(1), +y.toFixed(1)]))}'>
+      <ellipse class="d-ripple" rx="0" ry="0"/><ellipse class="d-ripple" rx="0" ry="0"/><ellipse class="d-ripple" rx="0" ry="0"/>
+      <g class="d-shadow"><ellipse rx="9" ry="2.6"/><path d="M-11 0 l-7 -3 M-11 0 l-7 3"/></g>
+      <g class="d-drops"><circle r="1.3"/><circle r="1.1"/><circle r="1.3"/><circle r="1"/><circle r="1.2"/><circle r="1"/></g>
+      <g class="dolphin"><g transform="scale(1.25)">
+        <path class="d-fluke" d="M-11 0.6 L-16.5 -3.6 L-14.6 0.6 L-16.5 4.6Z"/>
+        <path class="d-fin" d="M-1.5 -4.4 L-4.6 -9.2 L1.8 -5Z"/>
+        <path class="d-body" d="M-12 0.4 C-8 -5 2 -6.2 8 -3.2 C10 -2.1 12.5 -1.2 15 -0.7 C12.5 0.5 10 0.9 8 1.1 C3 4.2 -6 4.2 -12 1.2Z"/>
+        <path class="d-belly" d="M-6 2.6 C-1 3.8 4 3.2 8 1.1 C4 1.8 -1 2.2 -6 2.6Z"/>
+        <circle class="d-eye" cx="7.6" cy="-1.5" r=".75"/>
+      </g></g>
+    </g>
     <g transform="translate(${wx} ${wy})"><g class="whale">
       <path class="spout" d="M-2 -13 v-5 M-5 -12 l-3 -4 M1 -12 l3 -4"/>
       <path class="body" d="M-13 0 q1 -10 13 -10 q11 0 13 7 q3 -7 8 -7 q-1 6 -5 9 q-10 9 -29 1z"/>
@@ -808,6 +824,7 @@ function drawTaiwan() {
       <circle r="20" class="rose-ring"/><path class="rose" d="M0 -26 L6 0 L0 26 L-6 0 Z"/><path class="rose-n" d="M0 -26 L6 0 L-6 0 Z"/>
       <text x="0" y="-32" text-anchor="middle">N</text></g>
   </svg>`;
+  startDolphin(mapbox.querySelector(".dolphin-layer"));
   mapbox.querySelectorAll(".pin").forEach(p => {
     p.addEventListener("click", () => go(p.dataset.trip));
     p.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(p.dataset.trip); } });
@@ -1007,7 +1024,75 @@ function isDark() {
   const r = document.documentElement.getAttribute("data-theme");
   return r ? r === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
 }
-function destroyMap() { clearInterval(dashTimer); if (gmap2) { gmap2.remove(); gmap2 = null; gmarkers = {}; } }
+/* ---------- 台灣白海豚動畫 ----------
+   一輪 13 秒：水面下沿海岸往南游（只見影子與尾流）→ 第一次高跳 → 水面下 → 第二次小跳 → 游到終點、波紋散開 → 停頓後從北邊重來。
+   跳躍畫成側面：身體沿拋物線往前飛，角度跟著速度方向（出水抬頭、最高點水平、入水低頭），出水與入水各濺起水花和一圈漣漪。 */
+let dolphinRaf = 0;
+function startDolphin(layer) {
+  cancelAnimationFrame(dolphinRaf);
+  if (!layer) return;
+  const [S, A, B, E] = JSON.parse(layer.dataset.path);   // 起點、第一跳、第二跳、終點（SVG 座標）
+  const leap = (from, d, h, dur) => ({ from, to: [from[0] - d, from[1]], h, dur });
+  const L1 = leap(A, 30, 8, 1.1), L2 = leap(B, 20, 5.5, 0.85);
+  // 時間軸：swim（水面下直線）與 leap（空中拋物線）交替
+  const plan = [
+    { kind: "swim", from: S, to: A, dur: 2.4 }, { kind: "leap", ...L1 },
+    { kind: "swim", from: L1.to, to: B, dur: 2.3 }, { kind: "leap", ...L2 },
+    { kind: "swim", from: L2.to, to: E, dur: 3.35 }
+  ];
+  let acc = 0; plan.forEach(p => { p.t0 = acc; acc += p.dur; });
+  const SWIM = acc, CYCLE = 13;
+  const pose = t => {
+    const p = plan.find(q => t < q.t0 + q.dur) || plan[plan.length - 1];
+    const u = Math.max(0, Math.min(1, (t - p.t0) / p.dur));
+    const dx = p.to[0] - p.from[0], dy = p.to[1] - p.from[1];
+    if (p.kind === "swim") return { x: p.from[0] + dx * u, y: p.from[1] + dy * u, vx: dx / p.dur, vy: dy / p.dur, air: false };
+    return { x: p.from[0] + dx * u, y: p.from[1] - p.h * 4 * u * (1 - u), vx: dx / p.dur, vy: -p.h * 4 * (1 - 2 * u) / p.dur, air: true };
+  };
+  // 水花事件：出水、入水、游到終點
+  const events = [{ t: plan[1].t0, at: L1.from, s: 1 }, { t: plan[1].t0 + L1.dur, at: L1.to, s: 1.25 },
+                  { t: plan[3].t0, at: L2.from, s: 0.85 }, { t: plan[3].t0 + L2.dur, at: L2.to, s: 1.05 }, { t: SWIM, at: E, s: 0.8 }];
+  const body = layer.querySelector(".dolphin"), shadow = layer.querySelector(".d-shadow");
+  const ripples = [...layer.querySelectorAll(".d-ripple")], drops = [...layer.querySelectorAll(".d-drops circle")];
+  const draw = t => {
+    const q = pose(Math.min(t, SWIM));
+    const flip = q.vx < 0, ang = Math.atan2(q.vy, flip ? -q.vx : q.vx) * 180 / Math.PI;
+    body.setAttribute("transform", `translate(${q.x.toFixed(2)} ${q.y.toFixed(2)}) scale(${flip ? -1 : 1} 1) rotate(${ang.toFixed(1)})`);
+    body.style.opacity = q.air ? 1 : 0;
+    // 水面下：影子與尾流，朝游動方向；空中時留一點淡影
+    const sa = Math.atan2(q.vy, flip ? -q.vx : q.vx) * 180 / Math.PI;
+    shadow.setAttribute("transform", `translate(${q.x.toFixed(2)} ${(q.air ? q.y + 0 : q.y + 1).toFixed(2)}) scale(${flip ? -1 : 1} 1) rotate(${q.air ? 0 : sa.toFixed(1)})`);
+    shadow.style.opacity = t >= SWIM ? Math.max(0, 0.55 - (t - SWIM) * 0.6) : (q.air ? 0 : 0.55);
+    // 漣漪：最近三個事件，2.2 秒內擴散淡出
+    const recent = events.filter(e => t >= e.t && t - e.t < 2.2).slice(-3);
+    ripples.forEach((r, i) => {
+      const e = recent[i]; if (!e) { r.style.opacity = 0; return; }
+      const k = (t - e.t) / 2.2;
+      r.setAttribute("cx", e.at[0].toFixed(2)); r.setAttribute("cy", (e.at[1] + 1).toFixed(2));
+      r.setAttribute("rx", (3 + 13 * k * e.s).toFixed(2)); r.setAttribute("ry", (1 + 4 * k * e.s).toFixed(2));
+      r.style.opacity = (0.75 * (1 - k)).toFixed(3);
+    });
+    // 水花：最近一次事件，0.55 秒內向兩側拋出落下
+    const splash = events.filter(e => t >= e.t && t - e.t < 0.55).pop();
+    drops.forEach((d, i) => {
+      if (!splash) { d.style.opacity = 0; return; }
+      const k = (t - splash.t) / 0.55, dir = (i - 2.5) / 2.5;
+      d.setAttribute("cx", (splash.at[0] + dir * 9 * k * splash.s).toFixed(2));
+      d.setAttribute("cy", (splash.at[1] - (10 * k - 13 * k * k) * splash.s * (1 - Math.abs(dir) * 0.3)).toFixed(2));
+      d.style.opacity = (1 - k).toFixed(3);
+    });
+  };
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) { draw(plan[1].t0 + L1.dur / 2); return; }
+  const t0 = performance.now();
+  const tick = now => {
+    if (!layer.isConnected) return;
+    draw(((now - t0) / 1000) % CYCLE);
+    dolphinRaf = requestAnimationFrame(tick);
+  };
+  dolphinRaf = requestAnimationFrame(tick);
+}
+
+function destroyMap() { clearInterval(dashTimer); cancelAnimationFrame(dolphinRaf); if (gmap2) { gmap2.remove(); gmap2 = null; gmarkers = {}; } }
 
 // 路線虛線緩緩前進，像在走路（減少動態設定時不動）
 // 虛線圖樣：實線 0.6、間隔 2.2（以線寬為單位），每一步把圖樣往前推 0.35
