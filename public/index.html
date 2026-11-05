@@ -601,6 +601,63 @@ const TRIPS = [
       { id: "thsr", kind: "move", name: "高鐵台南站", lon: 120.28560, lat: 22.92440, area: "台南歸仁", day: "6/21",
         note: "退房後到高鐵站，休息一下、買伴手禮，準備搭車回家。", tags: ["伴手禮"] }
     ]
+  },
+  {
+    id: "yilan-2026-08",
+    start: "2026-08-25",
+    title: "頭城看龜山島，三代同遊",
+    region: "宜蘭・頭城",
+    stamp: "頭",
+    county: "宜蘭縣",
+    map: { bounds: [[24.862, 121.828], [24.878, 121.846]] },
+    pin: { lon: 121.84, lat: 24.87, label: "頭城" },
+    dates: "2026/8/25 – 8/27",
+    length: "三天兩夜",
+    transport: ["高鐵", "Uber"],
+    hook: "第一次帶岳母和全家人一起旅遊。超大的海景套房，在房間就看得到龜山島。",
+    lead: "第一次帶岳母和全家人一起出遊，還有好朋友一家四口同行。第一天吃海鮮、逛蘭陽博物館；第二天原本預約了賞鯨，因為颱風取消，改在飯店玩水、玩遊戲室；第三天早上到沙灘走走，孩子抓到一隻小螃蟹，吃完 OA PIZZA 搭飯店接駁車回家。",
+    days: [
+      { label: "Day 1", date: "8/25（二）",
+        stops: ["happy36", "lanyang", "archipelago", "lanhai"],
+        note: "入住後先玩飯店設施，晚上去蘭海歐義廚房。" },
+      { label: "Day 2", date: "8/26（三）",
+        stops: [{ id: "archipelago", label: "飯店早餐 buffet" }, { id: "archipelago", label: "在飯店玩水、遊戲室" }],
+        note: "原本預約了賞鯨，因為颱風取消。" },
+      { label: "Day 3", date: "8/27（四）",
+        stops: [{ id: "archipelago", label: "飯店早餐 buffet" }, "beach", { id: "archipelago", label: "回飯店玩水、遊戲室" }, "oapizza", { id: "archipelago", label: "離開飯店，搭飯店接駁車" }] }
+    ],
+    highlight: {
+      title: "九個人的旅行",
+      text: [
+        "這趟一共九個人：我們一家四口、岳母，還有好朋友一家四口。",
+        "整體下來大家都玩得很開心，孩子們玩得意猶未盡，大人們也聊得很盡興。"
+      ]
+    },
+    story: {
+      title: "爸爸的旅行筆記",
+      text: [
+        "最難忘的畫面：第三天吃完早餐，我們一家四口從飯店走到海灘，看到跑得飛快的小螃蟹。隨手找了一個空紙杯，抓到一隻。這是孩子第一次這麼近看小螃蟹，興奮得不得了。",
+        "這一趟費用不便宜，但花得很值得，也體驗了新的景點和餐廳。希望下次可以實現賞鯨。"
+      ]
+    },
+    places: [
+      { id: "happy36", kind: "food", name: "幸福36號海鮮餐廳", lon: 121.83649, lat: 24.87110, area: "宜蘭頭城", day: "8/25 午餐",
+        note: "當天中午下了一點小雨。海鮮和餐點都不錯吃，可以再來。", tags: ["海鮮", "值得二訪"],
+        tip: "不能預約，要現場排隊。" },
+      { id: "lanyang", kind: "play", name: "蘭陽博物館", lon: 121.83277, lat: 24.86876, area: "宜蘭頭城", day: "8/25",
+        note: "難得來宜蘭，每一個館都去看看、走走，不曉得孩子印象最深刻的會是哪一個。", tags: ["博物館"] },
+      { id: "archipelago", kind: "stay", name: "凱渡廣場酒店 THE ARCHIPELAGO", labelLeft: true, lon: 121.84011, lat: 24.87106, area: "宜蘭頭城", day: "8/25–8/27 住宿",
+        note: "超大的海景套房，視野超大，在房間就看得到龜山島。早餐是 buffet；第二、三天孩子都在飯店玩水、玩遊戲室。最後一天搭飯店的接駁車離開。",
+        tags: ["海景套房", "看得到龜山島", "玩水", "遊戲室"] },
+      { id: "lanhai", kind: "food", name: "蘭海歐義廚房", lon: 121.83193, lat: 24.86741, area: "宜蘭頭城", day: "8/25 晚餐", labelLeft: true,
+        note: "個人覺得沒有到很好吃，下次可以選別間，不過老闆人很親切！", tags: ["歐義料理", "老闆親切"] },
+      { id: "beach", kind: "park", name: "飯店附近的沙灘", offMap: true, area: "宜蘭頭城", day: "8/27 上午",
+        note: "一家四口從飯店走到海灘。看到跑得飛快的小螃蟹，用隨手找到的空紙杯抓到一隻。", tags: ["小螃蟹", "散步"] },
+      { id: "oapizza", kind: "food", name: "OA PIZZA", lon: 121.83940, lat: 24.87198, area: "宜蘭頭城", day: "8/27 午餐", labelLeft: true,
+        note: "當天沒什麼人，我們等於包場。餐點都滿好吃的，pizza 很好吃。", tags: ["pizza", "值得二訪"] },
+      { id: "whale", kind: "wish", wish: true, offMap: true, name: "龜山島賞鯨", area: "宜蘭頭城",
+        note: "這次原本預約了賞鯨，因為颱風取消，希望下次可以實現。" }
+    ]
   }
 ];
 
