@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 小芒果：圓潤的芒果，頂端一片葉子和小梗 -->
+  <path d="M31 12.5 C31 10 32 8.5 34 7.5" fill="none" stroke="#6b4a2b" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M33.5 9 C38 4 46 4.5 50 7.5 C45 12 38 12.5 33.5 9Z" fill="#3d7a4c"/>
+  <path d="M36 8.7 C40 7.6 44 7.4 47 7.8" fill="none" stroke="#5e9e6c" stroke-width="1.2" stroke-linecap="round"/>
+  <path d="M31.5 12 C45 11 55 21 54 35 C53 50 42 58 30 58 C17.5 58 9.5 49.5 10 38 C10.6 23 19 12.8 31.5 12Z" fill="#f0a033"/>
+  <path d="M31.5 12 C42 11.5 50.5 17.5 53 27 C46 21 38 20 32 22 C24 24.5 18 22 16.5 20 C20.5 15 25.5 12.3 31.5 12Z" fill="#e8693a" opacity=".85"/>
+  <path d="M17 32 C17.5 26 20.5 22.5 24.5 21" fill="none" stroke="#fbd28a" stroke-width="3" stroke-linecap="round"/>
+  <!-- 臉：笑起來像彎月亮的眼睛、張嘴大笑 -->
+  <ellipse cx="20.5" cy="41" rx="4.2" ry="2.6" fill="#f2828a" opacity=".55"/>
+  <ellipse cx="43.5" cy="41" rx="4.2" ry="2.6" fill="#f2828a" opacity=".55"/>
+  <path d="M20.6 37.2 Q24.5 30.2 28.4 37.2 Q24.5 34 20.6 37.2Z" fill="#2f2a24" stroke="#2f2a24" stroke-width=".8" stroke-linejoin="round"/>
+  <path d="M35.6 37.2 Q39.5 30.2 43.4 37.2 Q39.5 34 35.6 37.2Z" fill="#2f2a24" stroke="#2f2a24" stroke-width=".8" stroke-linejoin="round"/>
+  <path d="M27.5 40.5 H36.5 Q36.5 47.5 32 47.5 Q27.5 47.5 27.5 40.5Z" fill="#2f2a24"/>
+  <path d="M29.6 45.8 Q32 43.6 34.4 45.8 Q33.6 47.4 32 47.4 Q30.4 47.4 29.6 45.8Z" fill="#f2828a"/>
+</svg>

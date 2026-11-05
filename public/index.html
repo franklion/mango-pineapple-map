@@ -290,6 +290,37 @@ header.brand { display: flex; flex-direction: column; gap: 6px; }
 .dot.again { background: transparent !important; color: var(--ink-soft); border: 2px dashed var(--line); font-size: 0.9rem; }
 .again-link { font: inherit; font-size: var(--step--1); color: var(--ink-soft); background: none; border: 0; padding: 4px 10px 14px; text-align: left; cursor: pointer; }
 .again-link:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+/* 小芒果、小鳳梨 */
+.kid { width: 1.35em; height: 1.35em; vertical-align: -0.35em; flex: none; }
+.kid-pair { display: inline-flex; margin-right: 4px; }
+.kid-pair .kid + .kid { margin-left: -0.3em; }
+.place .nick { display: inline-flex; align-items: center; gap: 4px; }
+.place .nick .kid { margin-right: 2px; }
+.kids-logo { display: inline-flex; vertical-align: -0.16em; margin-right: 8px; }
+.logo-kid { width: 1.15em; height: 1.15em; }
+.logo-kid + .logo-kid { margin-left: -0.2em; }
+.brand h1:hover .logo-kid { animation: hop .5s cubic-bezier(.3, 1.6, .6, 1); }
+.brand h1:hover .logo-kid + .logo-kid { animation-delay: .08s; }
+@keyframes hop { 40% { transform: translateY(-6px) rotate(-6deg); } }
+.empty-hint { display: flex; align-items: center; gap: 6px; }
+.map-loading { display: flex; align-items: center; gap: 8px; }
+.map-loading .kid { width: 28px; height: 28px; animation: bob-kid 1.2s ease-in-out infinite; }
+.map-loading .kid + .kid { animation-delay: .3s; }
+@keyframes bob-kid { 50% { transform: translateY(-4px); } }
+.kids-box { display: flex; flex-direction: column; gap: 10px; }
+.kids-box h3 { margin: 0; font-family: var(--font-display); font-size: var(--step-1); display: flex; align-items: center; gap: 4px; }
+.kid-says { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 10px; align-items: start; }
+.kid-av { width: 44px; height: 44px; border-radius: 50%; background: var(--card); border: 1.5px solid var(--line); padding: 3px; box-sizing: border-box; }
+.bubble { position: relative; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 8px 12px; min-width: 0; }
+.bubble::before { content: ""; position: absolute; left: -7px; top: 14px; width: 12px; height: 12px; background: var(--card); border-left: 1px solid var(--line); border-bottom: 1px solid var(--line); transform: rotate(45deg); }
+.bubble .who { font-size: 0.75rem; font-weight: 700; color: var(--mango-ink); }
+.kid-says.pineapple .bubble .who { color: var(--leaf); }
+.bubble p { margin: 2px 0 0; font-family: var(--font-display); font-size: 1.0625rem; line-height: 1.7; overflow-wrap: anywhere; }
+.kids-in-card { display: flex; flex-direction: column; gap: 8px; margin: 4px 0; }
+.kids-in-card .kid-av { width: 36px; height: 36px; }
+.kids-in-card .kid-says { grid-template-columns: 36px minmax(0, 1fr); }
+.kids-in-card .bubble p { font-size: var(--step--1); }
+@media (prefers-reduced-motion: reduce) { .map-loading .kid, .brand h1:hover .logo-kid { animation: none !important; } }
 footer.foot { margin-top: auto; font-size: 0.75rem; color: var(--ink-soft); }
 
 /* SVG map styling */
@@ -437,7 +468,7 @@ const TRIPS = [
       { id: "sheraton", kind: "stay", name: "新竹喜來登大飯店", lon: 121.02800, lat: 24.82071,
         note: "這趟的住宿，也是走路玩公園的起點。10/10 的晚餐就在飯店吃 Buffet，事先買電子票比現場購票便宜。", tags: ["散步起點", "Buffet 晚餐"] },
       { id: "veg", kind: "park", name: "莊敬蔬果公園", lon: 121.02898, lat: 24.82391, address: "新竹縣竹北市莊敬六街110號",
-        nick: "水果公園", age: "學齡前",
+        nick: "水果公園", nickBy: "pineapple", age: "學齡前",
         note: "散步的第一站。主角是一座土星造型的遊戲塔，連著三道滑梯和攀爬網。", tags: ["兒5公園", "土星遊戲塔"] },
       { id: "snail", kind: "park", name: "小蝸牛之家公園", lon: 121.03058, lat: 24.82858, area: "竹北市北興里",
         nick: "蝸牛公園", age: "學齡前",
@@ -672,9 +703,19 @@ let activePlace = null;
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const gmap = p => "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(p.query || p.address || (p.area ? p.name + " " + p.area : p.name));
 
+// 小芒果、小鳳梨角色
+const KIDS = { mango: { name: "小芒果", src: "xiao-mango.svg" }, pineapple: { name: "小鳳梨", src: "xiao-pineapple.svg" } };
+const kidImg = (who, cls = "kid") => `<img class="${cls}" src="${KIDS[who].src}" alt="${KIDS[who].name}" width="64" height="64">`;
+const kidsPair = (cls = "kid") => `<span class="kid-pair" aria-hidden="true">${kidImg("mango", cls)}${kidImg("pineapple", cls)}</span>`;
+// 孩子說：[{ who: "mango" | "pineapple", text }]
+const kidsSay = list => (list || []).map(k => `
+  <div class="kid-says ${k.who}">${kidImg(k.who, "kid-av")}
+    <div class="bubble"><span class="who">${KIDS[k.who].name}說</span><p>${esc(k.text)}</p></div>
+  </div>`).join("");
+
 function brandHTML() {
   return `<header class="brand">
-    <h1><span class="m">芒果</span><span class="p">鳳梨</span>散步地圖</h1>
+    <h1><span class="kids-logo">${kidImg("mango", "logo-kid")}${kidImg("pineapple", "logo-kid")}</span><span class="m">芒果</span><span class="p">鳳梨</span>散步地圖</h1>
     <p class="tag">帶孩子旅行，把世界變成故事</p>
     <p class="motto">走在巷弄與騎樓下，看風景、聽聲音、聞味道，把沿途遇見的人事物記下來。少則得，多則惑。</p>
   </header>`;
@@ -698,7 +739,7 @@ function renderOverview() {
   story.innerHTML = `${brandHTML()}
     <p class="section-label">我們走過的地方・${TRIPS.length} 趟</p>
     <ul class="trip-list">${cards}</ul>
-    <p class="empty-hint">下一趟旅行回來，這裡會多一張卡片。</p>
+    <p class="empty-hint">${kidsPair()}下一趟旅行回來，這裡會多一張卡片。</p>
     <footer class="foot">點卡片進入旅程，可以看到步行路線地圖和沿途的小故事。</footer>`;
   story.querySelectorAll("[data-trip]").forEach(b => b.addEventListener("click", () => go(b.dataset.trip)));
   drawTaiwan();
@@ -779,7 +820,8 @@ function placeCard(p, index) {
   const tags = (p.age ? `<span class="age">${esc(p.age)}</span>` : "") + (p.tags || []).map(t => `<span>${esc(t)}</span>`).join("");
   return `<div class="place" data-place="${p.id}" id="place-${p.id}" tabindex="0" role="button" aria-label="${esc(p.name)}">
       <span class="row"><span class="name">${esc(p.name)}</span><span class="kind" style="background:${kd.color}">${ic(p.kind)}${kd.label}</span>${p.day ? `<span class="day">${esc(p.day)}</span>` : ""}</span>
-      ${p.nick ? `<span class="nick">孩子叫它「${esc(p.nick)}」</span>` : ""}
+      ${p.nick ? `<span class="nick">${p.nickBy ? kidImg(p.nickBy) + KIDS[p.nickBy].name : kidsPair() + "孩子"}叫它「${esc(p.nick)}」</span>` : ""}
+      ${p.kids ? `<div class="kids-in-card">${kidsSay(p.kids)}</div>` : ""}
       <p>${esc(p.note)}</p>
       ${p.tip ? `<span class="tip">${ic("bulb")}<span>${esc(p.tip)}</span></span>` : ""}
       ${p.address || p.area ? `<span class="addr">${esc(p.address || p.area)}</span>` : ""}
@@ -837,6 +879,7 @@ function renderTrip(t) {
     ${highlightHTML}
     ${others ? `<section class="others"><h3>${ic("pin")}其他去過的地方</h3><ul class="other-list">${others}</ul></section>` : ""}
     ${wishes ? `<section class="others"><h3>${ic("wish")}這次沒去成，下次想去</h3><ul class="other-list">${wishes}</ul></section>` : ""}
+    ${t.kids ? `<section class="kids-box"><h3>${kidsPair()}孩子們說</h3>${kidsSay(t.kids)}</section>` : ""}
     ${t.story ? `<section class="story-box"><h3>${ic("pen")}${esc(t.story.title)}</h3>${[].concat(t.story.text).map(x => `<p>${esc(x)}</p>`).join("")}${t.blog ? `<a class="blog-link" href="${esc(t.blog.url)}" target="_blank" rel="noopener">${ic("book")}在部落格閱讀完整遊記 →</a>` : ""}</section>` : ""}
     <footer class="foot">點地點下方的連結，可在 Google 地圖查看路線與營業資訊。</footer>`;
   document.getElementById("backBtn").addEventListener("click", () => go(""));
@@ -1011,7 +1054,7 @@ async function drawLocal(t) {
   mapbox.classList.remove("tw");
   destroyMap();
   currentTrip = t;
-  mapbox.innerHTML = '<p class="map-loading">地圖載入中…</p>';
+  mapbox.innerHTML = `<p class="map-loading">${kidsPair("kid bob")}地圖載入中…</p>`;
   try { await loadMapLib(); }
   catch (err) { mapbox.innerHTML = '<p class="map-loading">地圖載入失敗，請檢查網路後重新整理頁面。</p>'; return; }
   if (currentTrip !== t || location.hash !== "#trip-" + t.id) return;  // 載入期間已離開這一頁
