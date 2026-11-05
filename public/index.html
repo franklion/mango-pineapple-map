@@ -791,8 +791,8 @@ function drawTaiwan() {
         <text x="10" y="18">${esc(t.pin.label)}・${t.start.slice(0, 4)}/${+t.start.slice(5, 7)}</text></g></g></g>`;
   }).join("");
   const total = counties.length, done = visited.size;
-  // 鯨魚：花蓮、台東外海由北往南游（起點、中段、終點）
-  const whalePath = [[121.99, 24.12], [121.93, 23.55], [121.74, 23.02]].map(([lo, la]) => P(lo, la));
+  // 鯨魚：花蓮、台東外海。三個點：起點、浮出水面處、終點（水面下沿海岸往南；浮出後往東、朝外海前進）
+  const whalePath = [[121.99, 24.14], [121.86, 23.62], [121.70, 23.00]].map(([lo, la]) => P(lo, la));
   // 台灣白海豚：沿西部沿海由北往南游（苗栗外海 → 彰化、雲林外海）。四個點：起點、第一跳、第二跳、終點，由 JS 逐格驅動
   const dolphinPath = [[120.52, 24.66], [120.36, 24.40], [120.20, 24.08], [119.98, 23.74]].map(([lo, la]) => P(lo, la));
   const critters = `
@@ -1108,74 +1108,75 @@ function startDolphin(layer) {
 }
 
 /* ---------- 鯨魚動畫 ----------
-   一輪 17 秒：水面下往南游（影子與尾流）→ 背部浮出水面、漣漪 → 在水面緩游、隨浪起伏，噴氣兩次（水柱長高、散成水珠落下、留下水霧）
-   → 低頭下潛、尾巴翹出水面再沒入 → 水面下續游 → 停頓後從北邊重來。水面以下的身體用 clipPath 切掉。 */
+   一輪 18 秒：水面下沿海岸往南游（影子與尾流朝前進方向）→ 背部浮出水面、漣漪 → 往東朝外海緩游、隨浪起伏，噴氣兩次
+   （V 字水柱、水珠、水霧）→ 低頭下潛、尾巴翹出水面再沒入 → 水面下續游到終點 → 停頓後從北邊重來。
+   頭永遠朝前進方向；水面以下的身體用 clipPath 切掉。 */
 let whaleRaf = 0;
 function startWhale(layer) {
   cancelAnimationFrame(whaleRaf);
   if (!layer) return;
-  const pts = JSON.parse(layer.dataset.path);
-  const segs = pts.slice(1).map((q, i) => ({ p: pts[i], q, len: Math.hypot(q[0] - pts[i][0], q[1] - pts[i][1]) }));
-  const total = segs.reduce((a, g) => a + g.len, 0);
-  const at = u => { let d = Math.max(0, Math.min(1, u)) * total;
-    for (const g of segs) { if (d <= g.len) { const k = d / g.len; return [g.p[0] + (g.q[0] - g.p[0]) * k, g.p[1] + (g.q[1] - g.p[1]) * k]; } d -= g.len; }
-    return pts[pts.length - 1]; };
-  const SWIM = 13, CYCLE = 17;
-  const T = { rise: 2.6, up: 4.0, diveStart: 9.4, diveEnd: 11.4 };           // 浮出、完全出水、開始下潛、沒入
-  const BLOWS = [{ t: 4.6, dur: 1.8, h: 1 }, { t: 7.4, dur: 1.4, h: 0.7 }];   // 噴氣
+  const [S, A, E] = JSON.parse(layer.dataset.path);
+  const A2 = [A[0] + 34, A[1]];                                       // 水面上往東（外海）前進的終點
+  const T = { rise: 3.0, up: 4.4, diveStart: 9.8, diveEnd: 11.8, end: 15 }, CYCLE = 18;
+  const BLOWS = [{ t: 5.0, dur: 1.8, h: 1 }, { t: 7.8, dur: 1.4, h: 0.7 }];
   const ease = k => k * k * (3 - 2 * k);
+  const lerp = (p, q, k) => [p[0] + (q[0] - p[0]) * k, p[1] + (q[1] - p[1]) * k];
+  // 位置與前進方向
+  const where = t => {
+    if (t < T.rise) return { p: lerp(S, A, t / T.rise), dir: [A[0] - S[0], A[1] - S[1]], under: true };
+    if (t < T.diveEnd) return { p: lerp(A, A2, (t - T.rise) / (T.diveEnd - T.rise)), dir: [1, 0], under: false };
+    const k = Math.min(1, (t - T.diveEnd) / (T.end - T.diveEnd));
+    return { p: lerp(A2, E, k), dir: [E[0] - A2[0], E[1] - A2[1]], under: true };
+  };
   const wrap = layer.querySelector(".w-at"), whale = layer.querySelector(".whale"), wake = layer.querySelector(".w-wake");
   const shadow = layer.querySelector(".w-shadow"), ripples = [...layer.querySelectorAll(".w-ripple")];
   const spout = layer.querySelector(".w-spout"), jets = spout.querySelector(".w-jets"), mist = spout.querySelector(".w-mist");
-  const jetPaths = [...jets.querySelectorAll("path")];
-  const drops = [...spout.querySelectorAll("circle")];
-  const events = [{ t: T.rise, s: 1 }, { t: T.diveEnd - 0.6, s: 1.3 }];
+  const jetPaths = [...jets.querySelectorAll("path")], drops = [...spout.querySelectorAll("circle")];
+  const events = [{ t: T.rise, at: A, s: 1 }, { t: T.diveEnd - 0.6, at: lerp(A, A2, (T.diveEnd - 0.6 - T.rise) / (T.diveEnd - T.rise)), s: 1.3 }];
   const draw = t => {
-    const tt = Math.min(t, SWIM), here = at(tt / SWIM), next = at(Math.min(1, tt / SWIM + 0.01));
-    const flip = next[0] > here[0];                                  // 鯨魚畫的是頭朝左
+    const tt = Math.min(t, T.end), w = where(tt);
     // 浮沉：dy 越大越深；tilt 為下潛時低頭（負值 = 頭往下、尾巴往上）
     let dy = 14, tilt = 0;
     if (tt >= T.rise && tt < T.up) dy = 14 * (1 - ease((tt - T.rise) / (T.up - T.rise)));
-    else if (tt >= T.up && tt < T.diveStart) dy = Math.sin(tt * 2.2) * 0.9;           // 隨浪起伏
+    else if (tt >= T.up && tt < T.diveStart) dy = Math.sin(tt * 2.2) * 0.9;
     else if (tt >= T.diveStart && tt < T.diveEnd) { const k = (tt - T.diveStart) / (T.diveEnd - T.diveStart);
       tilt = -40 * ease(Math.min(1, k * 1.6)); dy = 22 * k * k; }
-    const surf = tt >= T.rise && tt < T.diveEnd;
-    wrap.setAttribute("transform", `translate(${here[0].toFixed(2)} ${here[1].toFixed(2)}) scale(${flip ? -1 : 1} 1)`);
+    const surf = !w.under;
+    // 水面上一律往東（畫面右方）：圖是頭朝左，所以水平翻轉
+    wrap.setAttribute("transform", `translate(${w.p[0].toFixed(2)} ${w.p[1].toFixed(2)}) scale(-1 1)`);
     whale.setAttribute("transform", `translate(0 ${dy.toFixed(2)}) rotate(${tilt.toFixed(1)} 4 -2)`);
     wake.style.opacity = surf ? (0.7 * Math.max(0, 1 - Math.abs(dy) / 14)).toFixed(3) : 0;
     wake.setAttribute("transform", `translate(${(Math.sin(tt * 3) * 1.2).toFixed(2)} 0)`);
-    shadow.setAttribute("transform", `translate(${here[0].toFixed(2)} ${(here[1] + 2).toFixed(2)}) scale(${flip ? -1 : 1} 1)`);
-    shadow.style.opacity = t >= SWIM ? Math.max(0, 0.5 - (t - SWIM) * 0.5) : (surf && dy < 8 ? 0 : 0.5);
-    // 噴氣：水柱往上長 → 頂端散成水珠向兩側落下 → 水霧擴散淡出
+    // 水面下的影子：頭（-x 端）朝前進方向，尾流在後
+    const ang = Math.atan2(w.dir[1], w.dir[0]) * 180 / Math.PI + 180;
+    shadow.setAttribute("transform", `translate(${w.p[0].toFixed(2)} ${(w.p[1] + 2).toFixed(2)}) rotate(${ang.toFixed(1)})`);
+    shadow.style.opacity = t >= T.end ? Math.max(0, 0.5 - (t - T.end) * 0.5) : (surf && dy < 8 ? 0 : 0.5);
+    // 噴氣：V 字水柱往上長 → 頂端散成水珠向兩側落下 → 水霧擴散淡出
     const b = BLOWS.find(x => t >= x.t && t < x.t + x.dur);
     if (!b) spout.style.opacity = 0;
     else {
-      const k = (t - b.t) / b.dur, H = 16 * b.h;
+      const k = (t - b.t) / b.dur, H = 16 * b.h, g = Math.min(1, k / 0.3);
       spout.style.opacity = 1;
       spout.setAttribute("transform", `translate(-4 ${(-9 + dy).toFixed(2)})`);
-      const g = Math.min(1, k / 0.3);
-      // 三道水柱呈 V 字往上張開，頂端微微外翻
-      const h = H * g, w = 5 * b.h * g;
-      const d = `M0 0 Q0 ${(-h * 0.6).toFixed(2)} 0 ${(-h).toFixed(2)} M-0.6 -0.5 Q${(-w * 0.4).toFixed(2)} ${(-h * 0.6).toFixed(2)} ${(-w).toFixed(2)} ${(-h * 0.8).toFixed(2)} M0.6 -0.5 Q${(w * 0.4).toFixed(2)} ${(-h * 0.6).toFixed(2)} ${w.toFixed(2)} ${(-h * 0.8).toFixed(2)}`;
+      const h = H * g, ww = 5 * b.h * g;
+      const d = `M0 0 Q0 ${(-h * 0.6).toFixed(2)} 0 ${(-h).toFixed(2)} M-0.6 -0.5 Q${(-ww * 0.4).toFixed(2)} ${(-h * 0.6).toFixed(2)} ${(-ww).toFixed(2)} ${(-h * 0.8).toFixed(2)} M0.6 -0.5 Q${(ww * 0.4).toFixed(2)} ${(-h * 0.6).toFixed(2)} ${ww.toFixed(2)} ${(-h * 0.8).toFixed(2)}`;
       jetPaths.forEach(j => j.setAttribute("d", d));
       jets.style.opacity = k < 0.45 ? 1 : Math.max(0, 1 - (k - 0.45) / 0.25);
-      mist.setAttribute("cy", (-H).toFixed(2));
-      mist.setAttribute("rx", (2 + 7 * b.h * ease(Math.min(1, Math.max(0, (k - 0.2) / 0.8)))).toFixed(2));
-      mist.setAttribute("ry", (1.2 + 3 * b.h * ease(Math.min(1, Math.max(0, (k - 0.2) / 0.8)))).toFixed(2));
+      const m = ease(Math.min(1, Math.max(0, (k - 0.2) / 0.8)));
+      mist.setAttribute("cy", (-H).toFixed(2)); mist.setAttribute("rx", (2 + 7 * b.h * m).toFixed(2)); mist.setAttribute("ry", (1.2 + 3 * b.h * m).toFixed(2));
       mist.style.opacity = k < 0.2 ? 0 : (0.75 * (1 - (k - 0.2) / 0.8)).toFixed(3);
-      drops.forEach((d, i) => {
+      drops.forEach((dd, i) => {
         const kk = Math.max(0, (k - 0.25) / 0.75), dir = (i - 2.5) / 2.5;
-        d.setAttribute("cx", (dir * (5 + 9 * kk) * b.h).toFixed(2));
-        d.setAttribute("cy", (-H * (0.72 + 0.16 * ((i * 5) % 3) / 2) + (-5 * kk + 20 * kk * kk) * b.h).toFixed(2));
-        d.style.opacity = k < 0.25 ? 0 : (1 - kk).toFixed(3);
+        dd.setAttribute("cx", (dir * (5 + 9 * kk) * b.h).toFixed(2));
+        dd.setAttribute("cy", (-H * (0.72 + 0.16 * ((i * 5) % 3) / 2) + (-5 * kk + 20 * kk * kk) * b.h).toFixed(2));
+        dd.style.opacity = k < 0.25 ? 0 : (1 - kk).toFixed(3);
       });
     }
     // 漣漪：浮出與下潛的位置
     events.forEach((e, i) => {
       const r = ripples[i], k = (t - e.t) / 2.6;
       if (k < 0 || k > 1) { r.style.opacity = 0; return; }
-      const c = at(Math.min(e.t, SWIM) / SWIM);
-      r.setAttribute("cx", c[0].toFixed(2)); r.setAttribute("cy", (c[1] + 2).toFixed(2));
+      r.setAttribute("cx", e.at[0].toFixed(2)); r.setAttribute("cy", (e.at[1] + 2).toFixed(2));
       r.setAttribute("rx", (6 + 16 * k * e.s).toFixed(2)); r.setAttribute("ry", (1.8 + 4.5 * k * e.s).toFixed(2));
       r.style.opacity = (0.7 * (1 - k)).toFixed(3);
     });
