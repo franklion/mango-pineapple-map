@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 芒果鳳梨散步地圖：圓潤的芒果色地圖圖釘，頂端是鳳梨葉冠 -->
+  <rect width="64" height="64" rx="15" fill="#f4f6ec"/>
+  <!-- 鳳梨葉冠（三片厚葉） -->
+  <path d="M32 20 Q19 18 16 7 Q29 9 32 20Z" fill="#3d7a4c"/>
+  <path d="M32 20 Q45 18 48 7 Q35 9 32 20Z" fill="#3d7a4c"/>
+  <path d="M32 20 Q25 11 32 1 Q39 11 32 20Z" fill="#4f9460"/>
+  <!-- 芒果圖釘 -->
+  <path d="M32 61 C26 53 12 44 12 34 A20 20 0 0 1 52 34 C52 44 38 53 32 61Z" fill="#e8962a"/>
+  <path d="M21 28 A13 13 0 0 1 30 20.5" fill="none" stroke="#f6c27a" stroke-width="3.2" stroke-linecap="round"/>
+  <circle cx="32" cy="34" r="7.5" fill="#f4f6ec"/>
+</svg>
