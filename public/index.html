@@ -273,6 +273,11 @@ header.brand { display: flex; flex-direction: column; gap: 6px; }
 .day-note { padding-left: 46px; }
 .story-box.highlight h3 { color: var(--mango-ink); }
 .story-box.highlight .howto { margin-top: 6px; }
+.stop.again { align-items: center; }
+.stop.again::before { top: 30px; }
+.dot.again { background: transparent !important; color: var(--ink-soft); border: 2px dashed var(--line); font-size: 0.9rem; }
+.again-link { font: inherit; font-size: var(--step--1); color: var(--ink-soft); background: none; border: 0; padding: 4px 10px 14px; text-align: left; cursor: pointer; }
+.again-link:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
 footer.foot { margin-top: auto; font-size: 0.75rem; color: var(--ink-soft); }
 
 /* SVG map styling */
@@ -518,6 +523,71 @@ const TRIPS = [
       { id: "haohao", kind: "food", name: "HaoHao Kaffe", lon: 121.77751, lat: 24.68067, area: "宜蘭羅東", day: "4/19 午餐",
         note: "第二天的午餐，餐點非常棒，會想再來。", tags: ["值得二訪"] }
     ]
+  },
+  {
+    id: "tainan-2026-06",
+    start: "2026-06-19",
+    title: "台南端午慶龍舟",
+    region: "台南・中西區／安平",
+    stamp: "南",
+    county: "台南市",
+    map: { bounds: [[22.920, 120.160], [23.005, 120.290]] },
+    pin: { lon: 120.20, lat: 22.99, label: "台南", flag: "left" },
+    dates: "2026/6/19 – 6/21",
+    length: "三天兩夜",
+    transport: ["高鐵", "Uber"],
+    hook: "有收穫，也有一些惋惜的旅行。下次還會再來台南，好多美食還沒吃過！",
+    lead: "端午連假，我們一家四口和兩位好朋友一起到台南。第一天逛台南美術館、孔廟，在孔廟的大樹上看到松鼠，晚上去大東夜市；第二天去奇美博物館、安平老街，再到台南運河看龍舟決賽；第三天吃完飯店早餐退房，到高鐵站買伴手禮回家。",
+    days: [
+      { label: "Day 1", date: "6/19（五）",
+        stops: ["wellspring", "nanfang", "tnam", "confucius", "laoqiu", { id: "wellspring", label: "回飯店休息" }, "dadong"] },
+      { label: "Day 2", date: "6/20（六）",
+        stops: ["chimei", "yangcheng", "anping", "catfe", "dragonboat", "daisy"] },
+      { label: "Day 3", date: "6/21（日）",
+        stops: [{ id: "wellspring", label: "在飯店吃早餐、退房" }, "thsr"] }
+    ],
+    highlight: {
+      title: "這趟好像少了什麼",
+      text: [
+        "這趟是我們一家四口和兩位好朋友一起出發，不過大家的時間都對不太上，沒有太多時間好好跟著行程走。",
+        "旅行的目的是放鬆，不一定要走完每一個行程，但心裡總覺得少了什麼。對了，是凝聚感。"
+      ]
+    },
+    story: {
+      title: "爸爸的旅行筆記",
+      text: [
+        "最難忘的畫面，是孩子在雛菊餐桌吃到超大、色彩繽紛的造型棉花糖，視覺很震撼。",
+        "要找到合適的旅行夥伴真的不容易。你有心目中的好咖清單嗎？"
+      ]
+    },
+    places: [
+      { id: "wellspring", kind: "stay", name: "台南和逸飯店 西門館", lon: 120.19896, lat: 22.98761, area: "台南中西區", day: "6/19–6/21 住宿",
+        note: "住了兩晚。第一天先來寄放行李，最後一天吃完飯店早餐才退房。", tags: ["寄放行李", "飯店早餐"] },
+      { id: "nanfang", kind: "food", name: "南紡購物中心", lon: 120.23269, lat: 22.99099, area: "台南東區", day: "6/19 午餐",
+        note: "購物中心逛逛，午餐吃丸亀製麵。", tags: ["購物中心", "丸亀製麵"] },
+      { id: "tnam", kind: "play", name: "台南美術館 一館", lon: 120.20538, lat: 22.99119, area: "台南中西區", day: "6/19 下午", labelLeft: true,
+        note: "下午的第一站。", tags: ["美術館"] },
+      { id: "confucius", kind: "play", name: "孔廟", lon: 120.20495, lat: 22.99043, area: "台南中西區", day: "6/19 下午",
+        note: "在孔廟的大樹上看到了松鼠。", tags: ["松鼠", "古蹟"] },
+      { id: "laoqiu", kind: "food", name: "老邱茶舖", lon: 120.20450, lat: 22.98796, area: "台南中西區", day: "6/19 下午茶",
+        note: "有很多名字很有趣的飲料，當天點的都不錯喝。", tags: ["飲料", "值得二訪"] },
+      { id: "dadong", kind: "food", name: "大東夜市", lon: 120.21935, lat: 22.98282, area: "台南東區", day: "6/19 晚餐",
+        note: "中規中矩的夜市，有吃到烤魷魚！", tags: ["夜市", "烤魷魚"] },
+      { id: "chimei", kind: "play", name: "奇美博物館", lon: 120.22646, lat: 22.93446, area: "台南仁德", day: "6/20",
+        note: "第二天的第一站。", tags: ["博物館"] },
+      { id: "yangcheng", kind: "food", name: "洋城義大利餐廳", offMap: true, area: "台南", day: "6/20",
+        note: "逛完奇美博物館後去的義大利餐廳。", tags: ["義大利菜"] },
+      { id: "anping", kind: "play", name: "安平老街", lon: 120.16326, lat: 23.00046, area: "台南安平", day: "6/20", labelLeft: true,
+        note: "在安平老街一帶走走。", tags: ["老街"] },
+      { id: "catfe", kind: "food", name: "朵貓貓舍 & The Catf’e", lon: 120.16431, lat: 23.00053, area: "台南安平", day: "6/20",
+        note: "沒排在行程裡的店，招牌是一隻白色的貓咪。那天天氣很熱、汗如雨下，趕緊找一間賣冰飲和冰的店消暑。店裡的玻璃櫥窗可以看到貓咪，一邊喝飲料一邊看貓，很不錯的體驗。", tags: ["貓咪", "冰飲消暑"] },
+      { id: "dragonboat", kind: "play", name: "台南運河 龍舟決賽", lon: 120.16670, lat: 22.99830, area: "台南安億橋至承天橋", day: "6/20",
+        note: "在台南運河安億橋到承天橋這一段，看端午龍舟決賽。", tags: ["端午", "龍舟"] },
+      { id: "daisy", kind: "food", name: "雛菊餐桌 台南府前店", lon: 120.18731, lat: 22.99271, area: "台南中西區", day: "6/20",
+        note: "網美打卡甜點：超大、色彩繽紛的造型棉花糖，孩子看了很震撼。", tags: ["造型棉花糖", "網美甜點"] },
+      { id: "thsr", kind: "move", name: "高鐵台南站", lon: 120.28560, lat: 22.92440, area: "台南歸仁", day: "6/21",
+        note: "退房後到高鐵站，休息一下、買伴手禮，準備搭車回家。", tags: ["伴手禮"] }
+    ]
   }
 ];
 
@@ -542,7 +612,8 @@ function brandHTML() {
 
 /* ---------- 總覽 ---------- */
 // 行程順序：步行路線（route）或逐日行程（days），編號跨天連續
-const seqOf = t => t.route ? t.route.stops : (t.days || []).flatMap(d => d.stops);
+const sid = s => typeof s === "string" ? s : s.id;
+const seqOf = t => [...new Set((t.route ? t.route.stops : (t.days || []).flatMap(d => d.stops)).map(sid))];
 const byNewest = () => [...TRIPS].sort((a, b) => b.start.localeCompare(a.start));
 
 function renderOverview() {
@@ -648,6 +719,7 @@ function renderTrip(t) {
   const stopLi = id => { const p = byId[id], kd = KINDS[p.kind];
     return `<li class="stop"><span class="dot" style="background:${kd.color}">${seq.indexOf(id) + 1}</span>${placeCard(p)}</li>`; };
   const tipsBox = (title, tips) => tips ? `<div class="howto tips"><h4>${ic("bulb")}${esc(title)}</h4><ul>${tips.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : "";
+  const seen = new Set();
   const routeHTML = t.route ? `
     <section class="route">
       <h3>${ic("walk")}${esc(t.route.title)}</h3>
@@ -658,7 +730,11 @@ function renderTrip(t) {
     </section>` : (t.days || []).map(d => `
     <section class="route day">
       <h3>${ic("calendar")}${esc(d.label)}<span class="day-date">${esc(d.date)}</span></h3>
-      <ol class="stops">${d.stops.map(stopLi).join("")}</ol>
+      <ol class="stops">${d.stops.map(st => {
+        const id = sid(st), p = byId[id];
+        if (seen.has(id)) return `<li class="stop again"><span class="dot again" aria-hidden="true">↩</span><button class="again-link" data-place="${id}">${esc(st.label || "回到" + p.name)}</button></li>`;
+        seen.add(id); return stopLi(id);
+      }).join("")}</ol>
       ${d.note ? `<p class="sub day-note">${esc(d.note)}</p>` : ""}
     </section>`).join("");
   const highlightHTML = t.highlight ? `
@@ -692,6 +768,7 @@ function renderTrip(t) {
     if (e.target.closest("a")) return;
     setActive(b.dataset.place, false);
   }));
+  story.querySelectorAll(".again-link").forEach(b => b.addEventListener("click", () => setActive(b.dataset.place, false)));
   story.querySelectorAll(".place").forEach(b => b.addEventListener("keydown", e => {
     if ((e.key === "Enter" || e.key === " ") && !e.target.closest("a")) { e.preventDefault(); setActive(b.dataset.place, false); }
   }));
@@ -832,14 +909,14 @@ function animateRoute() {
 }
 function addRoute(t) {
   const byId = Object.fromEntries(t.places.map(p => [p.id, p]));
-  if (!t.route) {  // 逐日行程：每天一條細實線，第一天芒果色、第二天鳳梨綠
+  if (!t.route) {  // 逐日行程：每天一條細實線，依序芒果色、鳳梨綠、藍色
     (t.days || []).forEach((d, i) => {
       const id = "day-" + i;
-      if (gmap2.getSource(id) || d.stops.length < 2) return;
-      const coords = d.stops.map(s => [byId[s].lon, byId[s].lat]);
+      const coords = d.stops.map(st => byId[sid(st)]).filter(p => p && p.lon != null && !p.offMap).map(p => [p.lon, p.lat]);
+      if (gmap2.getSource(id) || coords.length < 2) return;
       gmap2.addSource(id, { type: "geojson", data: { type: "Feature", geometry: { type: "LineString", coordinates: coords } } });
       gmap2.addLayer({ id, type: "line", source: id, layout: { "line-cap": "round", "line-join": "round" },
-        paint: { "line-color": [isDark() ? "#f0a944" : "#e8962a", isDark() ? "#7bbf88" : "#3d7a4c"][i % 2], "line-width": 2.5, "line-opacity": 0.75 } });
+        paint: { "line-color": [isDark() ? "#f0a944" : "#e8962a", isDark() ? "#7bbf88" : "#3d7a4c", isDark() ? "#79a8d6" : "#3f74a6"][i % 3], "line-width": 2.5, "line-opacity": 0.75 } });
     });
     return;
   }
