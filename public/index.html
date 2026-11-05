@@ -968,8 +968,9 @@ function destroyMap() { clearInterval(dashTimer); if (gmap2) { gmap2.remove(); g
 
 // 路線虛線緩緩前進，像在走路（減少動態設定時不動）
 // 虛線圖樣：實線 0.6、間隔 2.2（以線寬為單位），每一步把圖樣往前推 0.35
+// 每一步把虛線往路線終點推 0.35（圖樣週期 2.8 = 實線 0.6 + 間隔 2.2），方向是 1 號流向最後一站
 const DASH_SEQ = Array.from({ length: 8 }, (_, k) => {
-  const o = k * 0.35;
+  const o = (8 - k) % 8 * 0.35;
   return o < 0.6 ? [0.6 - o, 2.2, o, 0] : [0, 2.2 - (o - 0.6), 0.6, o - 0.6];
 });
 let dashTimer = null;
