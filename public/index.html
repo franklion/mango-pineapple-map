@@ -256,10 +256,15 @@ header.brand { display: flex; flex-direction: column; gap: 6px; }
 .whale { animation: swim 4.5s ease-in-out infinite; }
 @keyframes spout { 0%, 55% { opacity: 0; transform: translateY(3px); } 65% { opacity: 1; transform: translateY(0); } 85%, 100% { opacity: 0; transform: translateY(-3px); } }
 @keyframes swim { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(2px); } }
-.pin .drop, .pin .eye { animation: pin-drop .7s cubic-bezier(.3, 1.5, .6, 1) .2s backwards; transform-box: fill-box; transform-origin: 50% 100%; }
+.pin .drop, .pin .eye { animation: pin-drop .7s cubic-bezier(.3, 1.5, .6, 1) backwards; animation-delay: calc(var(--i, 0) * .25s + .2s); transform-box: fill-box; transform-origin: 50% 100%; }
 .pin .eye { transform-origin: 50% 50%; }
-.pin .flag { animation: fade-up .5s ease-out .7s backwards; }
-.pin circle.halo { transform-box: fill-box; transform-origin: center; animation: halo 2.4s ease-out 1s infinite; }
+/* 旗子從靠近圖釘的那一端長出來 */
+.pin .flag-in { transform-box: fill-box; animation: flag-grow .45s cubic-bezier(.3, 1.4, .6, 1) backwards; animation-delay: calc(var(--i, 0) * .25s + .6s); transition: transform .2s ease; }
+.pin .flag-in.from-left { transform-origin: 0% 50%; }
+.pin .flag-in.from-right { transform-origin: 100% 50%; }
+@keyframes flag-grow { from { opacity: 0; transform: scale(.6); } }
+.pin:hover .flag-in, .pin:focus-visible .flag-in { transform: scale(1.06); }
+.pin circle.halo { transform-box: fill-box; transform-origin: center; animation: halo 2.4s ease-out infinite; animation-delay: calc(var(--i, 0) * .25s + 1.1s); }
 @keyframes pin-drop { from { transform: translateY(-40px); opacity: 0; } }
 @keyframes fade-up { from { opacity: 0; transform: translateY(4px); } }
 @keyframes halo { 0% { transform: scale(.6); opacity: .45; } 100% { transform: scale(2); opacity: 0; } }
@@ -272,8 +277,9 @@ header.brand { display: flex; flex-direction: column; gap: 6px; }
 @keyframes pop { from { transform: scale(0); } }
 
 @media (prefers-reduced-motion: reduce) {
-  .waves path, .boat, .whale, .whale .spout, .pin .drop, .pin .eye, .pin .flag, .pin circle.halo, .lmk .b, .lmk .l { animation: none !important; }
+  .waves path, .boat, .whale, .whale .spout, .pin .drop, .pin .eye, .pin .flag-in, .pin circle.halo, .lmk .b, .lmk .l { animation: none !important; }
   .whale .spout { opacity: 0; }
+  .pin .flag-in, .pin .flag rect { transition: none; }
 }
 .day-date { font-family: var(--font-body); font-size: var(--step--1); color: var(--ink-soft); font-weight: 400; margin-left: 4px; }
 .day-note { padding-left: 46px; }
@@ -299,9 +305,10 @@ footer.foot { margin-top: auto; font-size: 0.75rem; color: var(--ink-soft); }
 .county-label.on { fill: var(--mango-ink); font-weight: 700; font-size: 12px; }
 .pin .drop { fill: var(--mango); stroke: var(--card); stroke-width: 2; }
 .pin .eye { fill: var(--card); }
-.pin .flag rect { fill: var(--card); stroke: var(--mango); stroke-width: 1.5; }
+.pin .flag rect { fill: var(--card); stroke: var(--mango); stroke-width: 1.5; transition: stroke .2s ease, stroke-width .2s ease, fill .2s ease; }
 .pin .flag text { fill: var(--ink); font-family: var(--font-display); font-weight: 700; font-size: 13px; }
-.pin:hover .flag rect, .pin:focus .flag rect { fill: var(--mango-soft); }
+.pin:hover .flag rect, .pin:focus-visible .flag rect { fill: var(--mango-soft); stroke: var(--mango-ink); stroke-width: 2.2; }
+.pin:focus { outline: none; }
 .cartouche .c-title { fill: var(--ink-soft); font-size: 12px; font-family: var(--font-display); letter-spacing: .15em; }
 .cartouche .c-num { fill: var(--mango-ink); font-size: 30px; font-family: var(--font-display); font-weight: 700; }
 .cartouche .c-of { fill: var(--ink-soft); font-size: 16px; }
@@ -660,13 +667,19 @@ function drawTaiwan() {
   const shadow = counties.map(c => c.d).join("");
   const labels = counties.filter(c => !hideLabel.has(c.name) || visited.has(c.name)).map(c =>
     `<text class="county-label${visited.has(c.name) ? " on" : ""}" x="${c.c[0]}" y="${c.c[1]}">${short(c.name)}</text>`).join("");
-  const pins = TRIPS.map(t => { const [x, y] = P(t.pin.lon, t.pin.lat);
-    return `<g class="pin" data-trip="${t.id}" tabindex="0" role="button" aria-label="${esc(t.title)}">
+  // 依旅行日期先後排序，--i 控制每根圖釘與旗子依序出現
+  const pins = [...TRIPS].sort((m, n) => m.start.localeCompare(n.start)).map((t, i) => {
+    const [x, y] = P(t.pin.lon, t.pin.lat);
+    const fw = (t.pin.label.length + 1) * 16 + 92, left = t.pin.flag === "left";
+    // 外層 g 只負責定位（SVG transform 屬性）；內層 .flag-in 只負責動畫，兩者互不覆蓋
+    return `<g class="pin" data-trip="${t.id}" tabindex="0" role="button" aria-label="${esc(t.title)}" style="--i:${i}">
       <circle class="halo" cx="${x}" cy="${y}" r="16"/>
       <path class="drop" d="M ${x} ${y} c -3 -7 -10 -11 -10 -19 a 10 10 0 1 1 20 0 c 0 8 -7 12 -10 19 z"/>
       <circle class="eye" cx="${x}" cy="${y - 19}" r="4"/>
-      <g class="flag" transform="translate(${t.pin.flag === "left" ? x - 16 - ((t.pin.label.length + 1) * 16 + 92) : x + 16} ${y - 34})"><rect rx="8" width="${(t.pin.label.length + 1) * 16 + 92}" height="26"/>
-        <text x="10" y="18">${esc(t.pin.label)}・${t.start.slice(0, 4)}/${+t.start.slice(5, 7)}</text></g></g>`; }).join("");
+      <g class="flag" transform="translate(${left ? x - 16 - fw : x + 16} ${y - 34})">
+        <g class="flag-in ${left ? "from-right" : "from-left"}"><rect rx="8" width="${fw}" height="26"/>
+        <text x="10" y="18">${esc(t.pin.label)}・${t.start.slice(0, 4)}/${+t.start.slice(5, 7)}</text></g></g></g>`;
+  }).join("");
   const total = counties.length, done = visited.size;
   const [bx, by] = P(120.08, 24.45), [wx, wy] = P(121.93, 23.35);
   const critters = `
