@@ -641,7 +641,7 @@ const TRIPS = [
       ]
     },
     places: [
-      { id: "happy36", kind: "food", name: "幸福36號海鮮餐廳", lon: 121.83649, lat: 24.87110, area: "宜蘭頭城", day: "8/25 午餐",
+      { id: "happy36", kind: "food", name: "幸福36號海鮮餐廳", labelLeft: true, lon: 121.83649, lat: 24.87110, area: "宜蘭頭城", day: "8/25 午餐",
         note: "當天中午下了一點小雨。海鮮和餐點都不錯吃，可以再來。", tags: ["海鮮", "值得二訪"],
         tip: "不能預約，要現場排隊。" },
       { id: "lanyang", kind: "play", name: "蘭陽博物館", lon: 121.83277, lat: 24.86876, area: "宜蘭頭城", day: "8/25",
@@ -651,12 +651,12 @@ const TRIPS = [
         tags: ["海景套房", "看得到龜山島", "玩水", "遊戲室"] },
       { id: "lanhai", kind: "food", name: "蘭海歐義廚房", lon: 121.83193, lat: 24.86741, area: "宜蘭頭城", day: "8/25 晚餐", labelLeft: true,
         note: "個人覺得沒有到很好吃，下次可以選別間，不過老闆人很親切！", tags: ["歐義料理", "老闆親切"] },
-      { id: "beach", kind: "park", name: "飯店附近的沙灘", offMap: true, area: "宜蘭頭城", day: "8/27 上午",
+      { id: "beach", kind: "park", name: "飯店附近的沙灘", lon: 121.84096, lat: 24.87315, query: "24.87315,121.84096", area: "宜蘭頭城", day: "8/27 上午",
         note: "一家四口從飯店走到海灘。看到跑得飛快的小螃蟹，用隨手找到的空紙杯抓到一隻。", tags: ["小螃蟹", "散步"] },
       { id: "oapizza", kind: "food", name: "OA PIZZA", lon: 121.83940, lat: 24.87198, area: "宜蘭頭城", day: "8/27 午餐", labelLeft: true,
         note: "當天沒什麼人，我們等於包場。餐點都滿好吃的，pizza 很好吃。", tags: ["pizza", "值得二訪"] },
-      { id: "whale", kind: "wish", wish: true, offMap: true, name: "龜山島賞鯨", area: "宜蘭頭城",
-        note: "這次原本預約了賞鯨，因為颱風取消，希望下次可以實現。" }
+      { id: "whale", kind: "wish", wish: true, name: "龜山島賞鯨", lon: 121.9516, lat: 24.84313, area: "宜蘭頭城",
+        note: "這次原本預約了賞鯨，因為颱風取消，希望下次可以實現。地圖上標在龜山島，實際出海看鯨豚是在附近海域。" }
     ]
   }
 ];
@@ -670,7 +670,7 @@ const mapNote = document.getElementById("mapNote");
 let activePlace = null;
 
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const gmap = p => "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(p.address || (p.area ? p.name + " " + p.area : p.name));
+const gmap = p => "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(p.query || p.address || (p.area ? p.name + " " + p.area : p.name));
 
 function brandHTML() {
   return `<header class="brand">
