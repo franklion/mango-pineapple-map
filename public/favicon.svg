@@ -1,12 +1,41 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <!-- 芒果鳳梨散步地圖：圓潤的芒果色地圖圖釘，頂端是鳳梨葉冠 -->
+  <!-- 芒果鳳梨散步地圖：小鳳梨在右後方、小芒果在左前方 -->
   <rect width="64" height="64" rx="15" fill="#f4f6ec"/>
-  <!-- 鳳梨葉冠（三片厚葉） -->
-  <path d="M32 20 Q19 18 16 7 Q29 9 32 20Z" fill="#3d7a4c"/>
-  <path d="M32 20 Q45 18 48 7 Q35 9 32 20Z" fill="#3d7a4c"/>
-  <path d="M32 20 Q25 11 32 1 Q39 11 32 20Z" fill="#4f9460"/>
-  <!-- 芒果圖釘 -->
-  <path d="M32 61 C26 53 12 44 12 34 A20 20 0 0 1 52 34 C52 44 38 53 32 61Z" fill="#e8962a"/>
-  <path d="M21 28 A13 13 0 0 1 30 20.5" fill="none" stroke="#f6c27a" stroke-width="3.2" stroke-linecap="round"/>
-  <circle cx="32" cy="34" r="7.5" fill="#f4f6ec"/>
+  <svg x="23" y="2" width="44" height="44" viewBox="0 0 64 64">
+  
+  <defs><clipPath id="pba"><path d="M32 20 C44 20 50.5 27.5 52 36 C55.5 41 55 49 50.5 53.5 C46 58 39 59.5 32 59.5 C25 59.5 18 58 13.5 53.5 C9 49 8.5 41 12 36 C13.5 27.5 20 20 32 20Z"/></clipPath></defs>
+  <path d="M32 23 Q23 21 19 9 Q30 12 32 23Z" fill="#3d7a4c"/>
+  <path d="M32 23 Q41 21 45 9 Q34 12 32 23Z" fill="#3d7a4c"/>
+  <path d="M32 23 Q26 13 32 2 Q38 13 32 23Z" fill="#4f9460"/>
+  <path d="M32 20 C44 20 50.5 27.5 52 36 C55.5 41 55 49 50.5 53.5 C46 58 39 59.5 32 59.5 C25 59.5 18 58 13.5 53.5 C9 49 8.5 41 12 36 C13.5 27.5 20 20 32 20Z" fill="#f4c23e"/>
+  <g clip-path="url(#pba)" stroke="#d99a1e" stroke-width="1.6" stroke-linecap="round" opacity=".7">
+    <path d="M4 30 L40 66 M4 18 L52 66 M14 16 L64 66 M26 16 L64 54 M38 16 L64 42"/>
+    <path d="M60 30 L24 66 M60 18 L12 66 M50 16 L0 66 M38 16 L0 54 M26 16 L0 42"/>
+  </g>
+  <path d="M18 34 C19 28.5 22.5 25 27 23.5" fill="none" stroke="#fde59a" stroke-width="3" stroke-linecap="round"/>
+  
+  <circle cx="18.5" cy="46.5" r="6" fill="#f2828a" opacity=".55"/>
+  <circle cx="45.5" cy="46.5" r="6" fill="#f2828a" opacity=".55"/>
+  <circle cx="16.8" cy="44.6" r="1.4" fill="#fff" opacity=".75"/>
+  <circle cx="43.8" cy="44.6" r="1.4" fill="#fff" opacity=".75"/>
+  <circle cx="24.5" cy="38.5" r="3.6" fill="#2f2a24"/><circle cx="25.7" cy="37.2" r="1.3" fill="#fff"/><circle cx="23.4" cy="40" r=".6" fill="#fff"/>
+  <circle cx="39.5" cy="38.5" r="3.6" fill="#2f2a24"/><circle cx="40.7" cy="37.2" r="1.3" fill="#fff"/><circle cx="38.4" cy="40" r=".6" fill="#fff"/>
+  <path d="M27.5 44.5 Q29.75 47.5 32 44.5 Q34.25 47.5 36.5 44.5" fill="none" stroke="#2f2a24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+  <svg x="-4" y="17" width="46" height="46" viewBox="0 0 64 64">
+  
+  <path d="M31 12.5 C31 10 32 8.5 34 7.5" fill="none" stroke="#6b4a2b" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M33.5 9 C38 4 46 4.5 50 7.5 C45 12 38 12.5 33.5 9Z" fill="#3d7a4c"/>
+  <path d="M36 8.7 C40 7.6 44 7.4 47 7.8" fill="none" stroke="#5e9e6c" stroke-width="1.2" stroke-linecap="round"/>
+  <path d="M31.5 12 C45 11 55 21 54 35 C53 50 42 58 30 58 C17.5 58 9.5 49.5 10 38 C10.6 23 19 12.8 31.5 12Z" fill="#f0a033"/>
+  <path d="M31.5 12 C42 11.5 50.5 17.5 53 27 C46 21 38 20 32 22 C24 24.5 18 22 16.5 20 C20.5 15 25.5 12.3 31.5 12Z" fill="#e8693a" opacity=".85"/>
+  <path d="M17 32 C17.5 26 20.5 22.5 24.5 21" fill="none" stroke="#fbd28a" stroke-width="3" stroke-linecap="round"/>
+  
+  <ellipse cx="20.5" cy="41" rx="4.2" ry="2.6" fill="#f2828a" opacity=".55"/>
+  <ellipse cx="43.5" cy="41" rx="4.2" ry="2.6" fill="#f2828a" opacity=".55"/>
+  <path d="M20.6 37.2 Q24.5 30.2 28.4 37.2 Q24.5 34 20.6 37.2Z" fill="#2f2a24" stroke="#2f2a24" stroke-width=".8" stroke-linejoin="round"/>
+  <path d="M35.6 37.2 Q39.5 30.2 43.4 37.2 Q39.5 34 35.6 37.2Z" fill="#2f2a24" stroke="#2f2a24" stroke-width=".8" stroke-linejoin="round"/>
+  <path d="M27.5 40.5 H36.5 Q36.5 47.5 32 47.5 Q27.5 47.5 27.5 40.5Z" fill="#2f2a24"/>
+  <path d="M29.6 45.8 Q32 43.6 34.4 45.8 Q33.6 47.4 32 47.4 Q30.4 47.4 29.6 45.8Z" fill="#f2828a"/>
+</svg>
 </svg>
